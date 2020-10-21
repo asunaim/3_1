@@ -28,7 +28,7 @@ int main()
 	//加载socket库
 	WSADATA wsaData;
 	//MAKEWORD(2.2),成功返回0
-	if (WSAStartup(MAKEWORD(2,2), &wsaData)!=0)
+	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
 	{
 		cout << "socket初始化失败" << endl;
 		return 0;
@@ -39,26 +39,34 @@ int main()
 	sockSer = socket(AF_INET, SOCK_STREAM, 0);//地址类型（ipv4），服务类型（流式套接字）
 
 	//初始化地址
-	addrSer.sin_addr.s_addr = htonl(INADDR_ANY);
+	addrSer.sin_addr.s_addr = inet_addr("10.130.124.12");
 	addrSer.sin_family = AF_INET;
 	addrSer.sin_port = htons(PORT);
 
 	//绑定
-	bind(sockSer, (SOCKADDR*)&addrSer, sizeof(SOCKADDR));//强制类型转换，SOCKADDR_IN方便赋值 SOCKADDR方便传输
+	if(bind(sockSer, (SOCKADDR*)&addrSer, sizeof(SOCKADDR))==-1) 
+		cout<<"bind error"<<endl;//强制类型转换，SOCKADDR_IN方便赋值 SOCKADDR方便传输
 
+	cout << "Server" << endl;
 	//监听
 	cout << "listening" << endl;
+
 	listen(sockSer, 5);
 	while (1)
 	{
 		SOCKET sockConn = accept(sockSer, (SOCKADDR*)&addrCli, &len);//失败sockConn=INVALID_SOCKET
-		if (sockConn != INVALID_SOCKET)
-		{
-			recv(sockConn, recvBuf, strlen(recvBuf), 0);
-			send(sockConn, sendBuf, strlen(sendBuf), 0);
+	if (sockConn != INVALID_SOCKET)
+	{
+		cout << "connected" << endl;
+		recv(sockConn, recvBuf, 2048, 0);
+		cout << "收到消息：" << recvBuf << endl;
+		/*cin >> sendBuf;
+		send(sockConn, sendBuf, strlen(sendBuf), 0);
+		cout << "connected" << endl;*/
+
 		}
 	}
-
-
+		closesocket(sockSer);
+		WSACleanup();
 	return 0;
 }
