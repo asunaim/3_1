@@ -1,0 +1,28 @@
+int s;
+int f(){
+	int a;
+	a=0;
+	while(a<10){
+		a*=2;
+	}
+	return a;
+}
+int main(){
+	int a;
+	a=0;
+	if(a==0)
+	{
+		int a;
+		a=a+1;
+		const int b=0x10;
+		int c=010;
+	}
+	/*comm
+
+
+
+
+	ent*/
+
+	return 0;
+}
