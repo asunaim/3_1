@@ -8,8 +8,6 @@
 	#include "sym.c"
 	// #include "string.c"
 	using namespace std;
-	//c++语言样例
-	//文件输入输出+注释
 
 
 }
@@ -147,7 +145,7 @@ string	\"[^\t\n\r]*\"
 <COMMENT>{commentend}	{BEGIN INITIAL;}
 
 %{
-	// 单行注释，待写
+	// 单行注释
 %}
 {singlecommentbegin}	{BEGIN SINGLECOMMENT;}
 <SINGLECOMMENT>{singlecommentelement}	{;}
