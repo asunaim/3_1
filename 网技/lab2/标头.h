@@ -30,5 +30,8 @@ typedef struct Data_t {//包含帧首部和IP首部的数据包
 
 //函数声明
 void find_alldevs();	//获取本机的设备列表
-pcap_t* open(char* name);	//打开网络接口
+//pcap_t* open(char* name);	//打开网络接口
 void get_info(char* name);//获取并打印所需信息
+
+//线程函数
+DWORD WINAPI handlerRequest(LPVOID lparam);
