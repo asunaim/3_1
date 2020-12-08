@@ -75,7 +75,7 @@ int main()
 
 	while (1)
 	{
-		message b;
+		message b,c;
 		//cout << "1";
 		//strcpy_s(b.msg, "xxxxxxxx");
 		//b.set_ack();
@@ -83,12 +83,11 @@ int main()
 		////b.checksum = 235;
 		//u_char* a ;
 		//a = (u_char*)&b;
-		simplerecv(b);
+		stopwaitrecv(b,c);
 		if (b.get_exist())
 		{
-			cout << b.msg << endl;
-			if (b.checkchecksum() != 1)
-			cout << "报文错误" << endl;
+			//cout << b.msg << endl;
+			tackle(b);
 		}
 		Sleep(2000);
 	}
