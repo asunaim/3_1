@@ -75,6 +75,8 @@ struct message//报文格式
 
 	void setchecksum();//设置校验和
 	bool checkchecksum();//检验校验和
+
+	void print();//输出标志位
 };
 #pragma pack()
 
@@ -168,7 +170,17 @@ int message::get_endfile()
 	else return 0;
 }
 
-
+void message::print()//输出标志位
+{
+	if(get_ack())cout<<"ACK ";
+	if( get_syn())cout<<"SYN ";
+	if( get_fin())cout<<"FIN ";
+	if( get_nak())cout<<"NAK ";
+	if( get_exist())cout<<"EX ";
+	if( get_startfile())cout<<"SF ";
+	if( get_endfile())cout<<"EF ";
+	cout << endl;
+}
 
 void message::setchecksum()
 {

@@ -7,7 +7,7 @@ int tackle(message b);//处理收到的报文
 int buildconnectionSer();//服务端建立连接
 void outfile(char* name, char content[10000][1024], int length, int& index);//将收到的字符串转化成文件
 int recvfile(message a);//接收文件并存入数组
-
+int byeser();//四次挥手
 
 //////////////////////////////////////////////////
 
@@ -28,9 +28,13 @@ int tackle(message b)//处理收到的报文
 			cout << "建立连接" << endl;
 		else cout << "连接建立失败" << endl;
 	}
-	if (b.get_startfile())
+	else if (b.get_startfile())
 	{
 		recvfile(b);
+	}
+	if (b.get_fin())
+	{
+		byeser();
 	}
 	return 1;
 }
@@ -83,7 +87,9 @@ int buildconnectionSer()//服务端建立连接
 
 int recvfile(message a)
 {
-	
+	message t;
+	t.set_ack();
+	simplesend(t);
 	
 	int index = a.index;
 	int length = a.filelength;
@@ -146,4 +152,17 @@ void outfile(char* name, char content[10000][1024], int length, int& index)
 	for (int j = 0; j < length; j++)
 		fout << content[index][j];
 	fout.close();
+}
+
+int byeser()//三次挥手,已经收到以此fin
+{
+	message a, b, c;
+	a.set_fin();
+	if (stopwaitsend(a, b))
+	{
+		cout << "连接断开成功" << endl;
+		return 1;
+	}
+	else cout << "连接断开失败" << endl;
+	return 0;
 }

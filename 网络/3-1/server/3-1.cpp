@@ -75,7 +75,7 @@ int main()
 
 	while (1)
 	{
-		message b,c;
+		message b;
 		//cout << "1";
 		//strcpy_s(b.msg, "xxxxxxxx");
 		//b.set_ack();
@@ -83,7 +83,7 @@ int main()
 		////b.checksum = 235;
 		//u_char* a ;
 		//a = (u_char*)&b;
-		stopwaitrecv(b,c);
+		simplerecv(b);
 		if (b.get_exist())
 		{
 			//cout << b.msg << endl;
@@ -91,4 +91,7 @@ int main()
 		}
 		Sleep(2000);
 	}
+	closesocket(sock);
+	WSACleanup();
+	return 0;
 }
