@@ -26,7 +26,7 @@ int recvseq = 0;
 
 int addr_len = sizeof(struct sockaddr_in);
 SOCKET sock;
-SOCKADDR_IN addrop,addr;//ip+端口号
+SOCKADDR_IN addrop, addr;//ip+端口号
 char content[10000][1024];
 struct cond//初始序号，接收缓冲区大小，最大段尺寸
 {
@@ -72,9 +72,11 @@ struct message//报文格式
 	int get_exist();
 	int get_startfile();
 	int get_endfile();
-	
+
 	void setchecksum();//设置校验和
 	bool checkchecksum();//检验校验和
+
+	void print();//输出标志位
 };
 #pragma pack()
 
@@ -88,22 +90,22 @@ void message::set_recv_ip(char* s) {}
 void message::set_send_port(int s) {}
 void message::set_recv_port(int s) {}
 //ACK=0x01, SYN=0x02, FIN=0x04, NAK=0x08
-void message::set_ack() 
+void message::set_ack()
 {
 	if (get_ack() == 0)
 		flag += 0x01;
 }
-void message::set_syn() 
+void message::set_syn()
 {
 	if (get_syn() == 0)
 		flag += 0x02;
 }
-void message::set_fin() 
+void message::set_fin()
 {
 	if (get_fin() == 0)
 		flag += 0x04;
 }
-void message::set_nak() 
+void message::set_nak()
 {
 	if (get_nak() == 0)
 		flag += 0x08;
@@ -125,25 +127,25 @@ void message::set_endfile()
 		flag += 0x40;
 }
 
-int message::get_ack() 
+int message::get_ack()
 {
 	if (this->flag & 0x01)
 		return 1;
 	else return 0;
 }
-int message::get_syn() 
+int message::get_syn()
 {
 	if (this->flag & 0x02)
 		return 1;
 	else return 0;
 }
-int message::get_fin() 
+int message::get_fin()
 {
 	if (this->flag & 0x04)
 		return 1;
 	else return 0;
 }
-int message::get_nak() 
+int message::get_nak()
 {
 	if (this->flag & 0x08)
 		return 1;
@@ -168,15 +170,25 @@ int message::get_endfile()
 	else return 0;
 }
 
+void message::print()//输出标志位
+{
+	if (get_ack())cout << "ACK ";
+	if (get_syn())cout << "SYN ";
+	if (get_fin())cout << "FIN ";
+	if (get_nak())cout << "NAK ";
+	if (get_exist())cout << "EX ";
+	if (get_startfile())cout << "SF ";
+	if (get_endfile())cout << "EF ";
+	cout << endl;
+}
 
-
-void message:: setchecksum()
+void message::setchecksum()
 {
 	int sum = 0;
 	u_char* temp = (u_char*)this;
 	for (int i = 0; i < 16; i++)
 	{
-		sum += temp[2*i]<<8+temp[2*i+1];
+		sum += temp[2 * i] << 8 + temp[2 * i + 1];
 		while (sum >= 0x10000)
 		{//溢出
 			int t = sum >> 16;

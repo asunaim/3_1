@@ -8,6 +8,7 @@ int sendfile(char* name);//发送文件
 
 void readfile(char* name, char content[10000][1024], int& length,  int  & index);
 //void recvfile(char* name,char content[10000][1024], int length,  int  & index);
+int byecli();//因为只是单向传输，写三次挥手即可
 
 
 int buildconnectionCli()//客户端，连接发起方
@@ -52,7 +53,8 @@ int buildconnectionCli()//客户端，连接发起方
 	message c;
 	c.set_ack();
 	simplesend(c);
-	cout << "连接成功";
+
+	cout << "连接成功"<<endl;
 }
 
 int sendfile(char* name)//发送文件
@@ -138,3 +140,35 @@ void readfile(char* name,char content[10000][1024],int &length,  int  & index)
 
 
 
+int byecli()//四次挥手
+{
+	//第一次挥手，发送FIN
+	message a,b,c;
+	a.set_fin();//第一次
+	simplesend(a);
+
+
+	if (stopwaitrecv(b, c))//收到的消息写入b中，第二次和第三次
+	{
+		if (b.get_fin())//返回fin，
+		{
+			message d;
+			d.set_ack();
+			simplesend(d);
+			{
+				cout << "成功断开连接" << endl;
+				return 1;
+			}
+		}
+		else
+		{
+			cout << "断开连接失败" << endl;
+			return 0;
+		}
+	}
+	else
+	{
+		cout << "断开连接失败" << endl;
+		return 0;
+	}
+}

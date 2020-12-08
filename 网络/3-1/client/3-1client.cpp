@@ -100,9 +100,39 @@ int main()
 
 
 
-
-	//buildconnectionCli();
-	char* name=new char[10];
+	while (1)
+	{
+		cout << "建立连接1 发送文件2 断开连接3 请选择操作：";
+		int op;
+		cin >> op;
+		switch (op)
+		{
+		case 1:
+		{
+			buildconnectionCli(); 
+			continue;
+		}
+		case 2:
+		{
+			char name[100];
+			cout << endl << "请输入文件名：";
+			cin >> name;
+			sendfile(name);
+			continue;
+		}
+		case 3:
+		{
+			byecli();
+			goto a;
+		}
+		}
+	}
+	
+	/*char* name=new char[10];
 	strcpy(name, "helloworld.txt");
-	sendfile(name);
+	*/
+	
+a:	closesocket(sock);
+	WSACleanup();
+	return 0;
 }

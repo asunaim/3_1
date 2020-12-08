@@ -20,12 +20,14 @@ void simplesend(message& a)
 		DWORD dwError = WSAGetLastError();
 		cout << dwError << endl;*/
 	}
+	if (a.flag) { cout << "发送 "; a.print(); }
 }
 
 void simplerecv(message& a)
 {
 	memset(a.msg, 0, sizeof(a.msg));
 	recvfrom(sock, (char*)&a, sizeof(message), 0, (struct sockaddr*)&addr, &addr_len);
+	if (a.flag) { cout << "接收 "; a.print(); }
 }
 
 
@@ -47,7 +49,10 @@ bool stopwaitsend(message& a, message b)//a写入待发送消息，如果收到对方返回的ack
 	{
 		simplerecv(b);
 		if (b.get_ack())//b包含对消息a的ack
+		{
+			cout << "发送&ack" << endl;
 			return 1;
+		}
 		clockend = clock();
 		if (flag == SENT_TIMES)
 			return 0;
@@ -95,6 +100,7 @@ bool stopwaitrecv(message& a, message b)//收到的消息写入a中
 				b.set_ack();
 				simplesend(b);
 				memset((char*)&b, 0, sizeof(message));
+				cout << "接收&ack" << endl;
 				return 1;
 			}
 		}
