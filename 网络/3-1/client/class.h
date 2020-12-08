@@ -11,6 +11,7 @@ using namespace std;
 #include<cstring>
 #include<string>
 #include<ctime>
+#include <fstream>
 
 clock_t clockstart, clockend;
 int sendseq = 0;
@@ -21,11 +22,12 @@ int recvseq = 0;
 #define BUF_SIZE 1024
 #define WAIT_TIME 5//1s
 #define SENT_TIMES 8//最多八次重传
+#define FILE_PACKET_LENGTH 1024
 
 int addr_len = sizeof(struct sockaddr_in);
 SOCKET sock;
 SOCKADDR_IN addrop,addr;//ip+端口号
-
+char content[10000][1024];
 struct cond//初始序号，接收缓冲区大小，最大段尺寸
 {
 
@@ -35,7 +37,7 @@ struct cond//初始序号，接收缓冲区大小，最大段尺寸
 #pragma pack(1)
 struct message//报文格式
 {
-	//ACK=0x01, SYN=0x02, FIN=0x04, NAK=0x08,EXIST 0x10
+	//ACK=0x01, SYN=0x02, FIN=0x04, NAK=0x08,EXIST 0x10,startfile 0x20,endfile 0x40
 	int flag;//标志位
 	DWORD SendIP, RecvIP;
 	int msgseq;
@@ -47,6 +49,8 @@ struct message//报文格式
 	int finseq;*/
 	//int nakseq;//消息序号和确认的消息序号
 	u_short checksum;
+	int index;
+	int filelength;
 	char msg[BUF_SIZE];
 	message();
 	void set_send_ip(char* s);
@@ -57,12 +61,18 @@ struct message//报文格式
 	void set_syn();
 	void set_fin();
 	void set_nak();
+	void set_exist();
+	void set_startfile();
+	void set_endfile();
+
 	int get_ack();
 	int get_syn();
 	int get_fin();
 	int get_nak();
 	int get_exist();
-	void set_exist();
+	int get_startfile();
+	int get_endfile();
+	
 	void setchecksum();//设置校验和
 	bool checkchecksum();//检验校验和
 };
@@ -104,6 +114,16 @@ void message::set_exist()
 		flag += 0x10;
 }
 
+void message::set_startfile()
+{
+	if (get_startfile() == 0)
+		flag += 0x20;
+}
+void message::set_endfile()
+{
+	if (get_startfile() == 0)
+		flag += 0x40;
+}
 
 int message::get_ack() 
 {
@@ -132,6 +152,18 @@ int message::get_nak()
 int message::get_exist()
 {
 	if (this->flag & 0x10)
+		return 1;
+	else return 0;
+}
+int message::get_startfile()
+{
+	if (this->flag & 0x20)
+		return 1;
+	else return 0;
+}
+int message::get_endfile()
+{
+	if (this->flag & 0x40)
 		return 1;
 	else return 0;
 }

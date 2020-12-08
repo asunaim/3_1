@@ -72,16 +72,16 @@ int main()
 	//	Sleep(2000);
 	//}
 	
-	while (1)
-	{
-		message b;
-		strcpy_s(b.msg, "xxxxxxxx");
-		simplesend(b);
-		/*if (b.exist)
-		{
-			cout << b.msg << endl;
-		}*/
-	}
+	//while (1)
+	//{
+	//	message b;
+	//	strcpy_s(b.msg, "xxxxxxxx");
+	//	simplesend(b);
+	//	/*if (b.exist)
+	//	{
+	//		cout << b.msg << endl;
+	//	}*/
+	//}
 
 	//while (1)
 	//{
@@ -102,4 +102,7 @@ int main()
 
 
 	//buildconnectionCli();
+	char* name=new char[10];
+	strcpy(name, "helloworld.txt");
+	sendfile(name);
 }
