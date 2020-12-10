@@ -23,12 +23,12 @@ int main()
 	}
 
 	// 设置超时
-	//struct timeval timeout;
-	//timeout.tv_sec = 0;//秒
-	//timeout.tv_usec = 20;//微秒
-	//if (setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout)) == -1) {
-	//	cout << "setsockopt failed:";
-	//}
+	struct timeval timeout;
+	timeout.tv_sec = 0;//秒
+	timeout.tv_usec = 20;//微秒
+	if (setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout)) == -1) {
+		cout << "setsockopt failed:";
+	}
 
 	//初始化地址
 	addrop.sin_addr.s_addr = inet_addr("127.0.0.1");
@@ -49,15 +49,23 @@ int main()
 	}*/
 
 
-	//message a;
-	//a.msgseq = 1;
-	//simplesend(a);
-
+	/*message a;
+	a.msgseq = 1;
+	simplesend(a);
+	clock_t start = clock();
+	for(int i=0;i<1816;i++)
+	{
+		message a;
+		simplerecv(a);
+	}
+	clock_t end = clock();
+	double endtime = (double)(end - start) / CLOCKS_PER_SEC;
+	cout << endtime << endl;*/
 	cout << "client" << endl;
 	int i = 0;
 	while (1)
 	{
-		char name[30] = { "1.jpg" };
+		char name[30] = { "2.jpg" };
 		/*cout << "请输入文件名 ";
 		cin >> name;
 		if (name == "quit")

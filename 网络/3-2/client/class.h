@@ -83,7 +83,7 @@ struct message//报文格式
 
 	void print();//输出标志位
 
-	static void copy(message& a, message& b,int i);
+	static void copy(message& a, message& b, int i);
 	static void copy(message& a, message& b);
 };
 #pragma pack()
@@ -192,7 +192,7 @@ int message::get_endfile()
 
 void message::print()//输出标志位
 {
-	cout << msgseq<<" ";
+	cout << msgseq << " ";
 	if (get_ack()) { cout << "ACK "; cout << ackseq << " "; }
 	if (get_syn())cout << "SYN ";
 	if (get_fin())cout << "FIN ";
@@ -240,7 +240,7 @@ bool message::checkchecksum()
 }
 
 
-void message:: copy(message& a, message& b,int j)//将b中的内容深拷贝至a
+void message::copy(message& a, message& b, int j)//将b中的内容深拷贝至a
 {
 	char* ta = (char*)&a;
 	char* tb = (char*)&b;

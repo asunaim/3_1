@@ -121,8 +121,8 @@ DWORD WINAPI recvhandler(LPVOID lparam)
 
 	while (base < buffersize)
 	{
-		//if (sendnextseq > base + N||sendnextseq==base)//窗口已满（对方还没有发送ack）或者窗口为空
-		//	Sleep(2);
+		if (sendnextseq > base + N||sendnextseq==base)//窗口已满（对方还没有发送ack）或者窗口为空
+			Sleep(2);
 		//cout << "接" << base << endl;
 		message a;
 		simplerecv(a);
@@ -130,12 +130,12 @@ DWORD WINAPI recvhandler(LPVOID lparam)
 		{
 			//cout << "receive" << endl;
 			clockstart = clock();//重置计时器
-			if (a.ackseq == base)//收到正确的消息序号
+			if (a.ackseq >= base)//收到正确的消息序号
 			{
 				base++;
 				overtime = 0;
 			}
-			else
+			else 
 			{
 				overtime = 1;//重传所有已发送未确认的分组
 			}
