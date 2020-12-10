@@ -34,6 +34,13 @@ SOCKADDR_IN addrop, addr;//ip+端口号
 char content[10000][1024];
 int base, sendnextseq, recvnextseq;
 int  N = 10;
+int status = 0;//标识server状态
+
+int filestatus = 0;//当前不在传输文件的状态
+int fileseq = 0;
+int index = 0; int length = 0;
+char name[30] = {};
+
 
 
 #pragma pack(1)

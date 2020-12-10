@@ -6,7 +6,9 @@ HANDLE hThread1, hThread2;
 DWORD dwThreadId1, dwThreadId2;
 DWORD WINAPI filehandler(LPVOID lparam1);
 
+DWORD WINAPI messagehandler(LPVOID lparam);
 
+message msgrecv[10000];
 
 int tackle(message b);//处理收到的报文
 int buildconnectionSer();//服务端建立连接
@@ -47,9 +49,6 @@ int tackle(message b)//处理收到的报文
 
 int buildconnectionSer()//服务端建立连接
 {
-	message a, b;
-	a.set_ack();// a.set_syn();
-	simplesend(a);
 	cout << "连接成功"<<endl;
 	return 1;
 }
@@ -129,18 +128,79 @@ int byeser()//三次挥手,已经收到以此fin
 	simplesend(a);
 	cout << "连接断开成功" << endl;
 	return 1;
-
-
 }
 
 //处理接收到的文件消息
 DWORD WINAPI filehandler(LPVOID lparam)
 {
-	filepacket* pkt = (filepacket*)(LPVOID)lparam;
+	/*filepacket* pkt = (filepacket*)(LPVOID)lparam;
 	memset(content[pkt->index], 0, 1024);
 	for(int j=0;j<pkt->length;j++)
 	{
 		content[pkt->index][j] = pkt->a.msg[j];
-	}
+	}*/
 	return 0;
+}
+
+DWORD WINAPI messagehandler(LPVOID lparam)//处理收到的消息
+{
+	message a = *(message*)(char*)(LPVOID)lparam;
+	if (a.get_syn())
+	{
+		if (!buildconnectionSer())
+			return 0;
+		else status = 1;
+	}
+	else if (status && a.get_startfile())
+	{
+		//cout << "接收文件" << endl;
+		memset(name, 0, sizeof(name));
+		filestatus = 1;
+		index = a.index;
+		length = a.filelength;
+		strcpy(name, a.msg);
+	}
+	else if (status && filestatus && a.get_endfile())//文件发送结束
+	{
+		//cout << "接收文件" << endl;
+		filestatus = 0;
+
+		if (fileseq != index)
+		{
+			cout << "出错" << endl;
+			return 0;
+		}
+		/*filepacket* packet = new filepacket;
+		packet->a = a;
+		packet->index = index;
+		packet->length = length;
+		hThread1 = ::CreateThread(NULL, NULL, filehandler, LPVOID(packet), 0, &dwThreadId1);*/
+		for (int i = 0; i < length; i++)
+		{
+			content[index][i] = a.msg[i];
+		}
+		//WaitForSingleObject(hThread1, 1000);
+		fileseq++;
+		fileseq = 0;
+		//
+
+		cout << "文件接收结束" << endl;
+	}
+	else if (status && filestatus)
+	{
+		fileseq++;
+
+		/*filepacket* packet = new filepacket;
+		packet->a = a;
+		packet->index = fileseq - 1;
+		packet->length = 1024;
+		hThread2 = ::CreateThread(NULL, NULL, filehandler, LPVOID(packet), 0, &dwThreadId2);*/
+		for (int i = 0; i < 1024; i++)
+		{
+			content[fileseq-1][i] = a.msg[i];
+		}
+		//WaitForSingleObject(hThread2, 1000);
+	}
+	else 
+	return 1;
 }

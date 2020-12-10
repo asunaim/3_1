@@ -20,7 +20,7 @@ void simplesend(message& a)
 		DWORD dwError = WSAGetLastError();
 		cout << dwError << endl;*/
 	}
-	else if (a.flag) { cout << "发送 "; a.print(); }
+	//else if (a.flag) { cout << "发送 "; a.print(); }
 	//recvnextseq++;
 }
 
@@ -28,7 +28,7 @@ void simplerecv(message& a)
 {
 	memset(a.msg, 0, sizeof(a.msg));
 	recvfrom(sock, (char*)&a, sizeof(message), 0, (struct sockaddr*)&addr, &addr_len);
-	if (a.flag) { cout << "接收 "; a.print(); }
+	//if (a.flag) { cout << "接收 "; a.print(); }
 }
 
 
