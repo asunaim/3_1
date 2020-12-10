@@ -2,6 +2,7 @@
 #include "class.h"
 
 
+
 void simplesend(message& a);//约定好各项信息之后的简易发送函数
 void simplerecv(message& a);
 
@@ -11,24 +12,38 @@ bool stopwaitrecv(message& a, message b);
 
 void simplesend(message& a)
 {
+	/*clock_t start = clock();*/
 	a.set_exist();
 	a.setchecksum();
 	//a.checkchecksum();
-	if (sendto(sock, (char*)&a, sizeof(message), 0, (struct sockaddr*)&addr, sizeof(sockaddr)) == SOCKET_ERROR)
+	if (sendto(sock, (char*)&a, sizeof(message), 0, (struct sockaddr*)&addr, sizeof(sockaddr)) == SOCKET_ERROR);
 	{
 		/*cout << "发送失败" << endl;
 		DWORD dwError = WSAGetLastError();
 		cout << dwError << endl;*/
 	}
-	else if (a.flag) { cout << "发送 "; a.print(); }
-	//recvnextseq++;
+	if (a.flag) { 
+		mutex mxt;
+		//mxt.lock();
+		cout << "发送 ";
+		a.print();
+		//mxt.unlock();
+	}
+	//clock_t end = clock();
+	//double endtime = (double)(end - start) / CLOCKS_PER_SEC;
+	//cout << "time:" << endtime << endl;		//s为单位
 }
 
 void simplerecv(message& a)
 {
 	memset(a.msg, 0, sizeof(a.msg));
 	recvfrom(sock, (char*)&a, sizeof(message), 0, (struct sockaddr*)&addr, &addr_len);
-	if (a.flag) { cout << "接收 "; a.print(); }
+	if (a.flag) { 
+		mutex mut;
+		//mut.lock();
+		cout << "接收s "; a.print(); cout << a.msg;
+		//mut.unlock();
+	}
 }
 
 
@@ -49,7 +64,7 @@ bool stopwaitsend(message& a, message b)//a写入待发送消息，如果收到对方返回的ack
 	while (1)
 	{
 		simplerecv(b);
-		if (b.get_ack()&& b.checkchecksum())//b包含对消息a的ack
+		if (b.get_ack() && b.checkchecksum())//b包含对消息a的ack
 		{
 			cout << "发送&ack" << endl;
 			return 1;
@@ -68,8 +83,6 @@ bool stopwaitsend(message& a, message b)//a写入待发送消息，如果收到对方返回的ack
 	return 0;//0代表发送失败
 }
 
-
-
 bool stopwaitrecv(message& a, message b)//收到的消息写入a中
 {
 	int flag = 0;
@@ -79,7 +92,7 @@ bool stopwaitrecv(message& a, message b)//收到的消息写入a中
 		if (a.get_exist())
 		{
 			int check = a.checkchecksum();
-			if(check)
+			if (check)
 			{
 				b.set_ack();
 				simplesend(b);

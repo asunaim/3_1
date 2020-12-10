@@ -14,16 +14,20 @@ using namespace std;
 #include<ctime>
 #include <fstream>
 
+#include <mutex>
+
 clock_t clockstart, clockend;
 int sendseq = 0;
 int recvseq = 0;
+int overtime = 0;//超时标识，用于线程间通信
 
 #define SPORT 30000
 #define CPORT 6666
 #define BUF_SIZE 1024
-#define WAIT_TIME 5//1s
+#define WAIT_TIME 2//1s
 #define SENT_TIMES 8//最多八次重传
 #define FILE_PACKET_LENGTH 1024
+#define SENDBUFFER 10000
 //线程
 
 
@@ -33,8 +37,8 @@ SOCKET sock;
 SOCKADDR_IN addrop, addr;//ip+端口号
 char content[10000][1024];
 int base, sendnextseq, recvnextseq;
-int  N = 10;
-
+int  N = 10;//窗口大小
+int buffersize = 0;//缓冲区大小
 
 #pragma pack(1)
 struct message//报文格式
@@ -78,6 +82,9 @@ struct message//报文格式
 	bool checkchecksum();//检验校验和
 
 	void print();//输出标志位
+
+	static void copy(message& a, message& b,int i);
+	static void copy(message& a, message& b);
 };
 #pragma pack()
 
@@ -178,15 +185,14 @@ int message::get_startfile()
 }
 int message::get_endfile()
 {
-	int t = this->flag & 0x40;
-	if (t)
+	if (this->flag & 0x40)
 		return 1;
 	else return 0;
 }
 
 void message::print()//输出标志位
 {
-	cout << msgseq << " ";
+	cout << msgseq<<" ";
 	if (get_ack()) { cout << "ACK "; cout << ackseq << " "; }
 	if (get_syn())cout << "SYN ";
 	if (get_fin())cout << "FIN ";
@@ -234,4 +240,21 @@ bool message::checkchecksum()
 }
 
 
-
+void message:: copy(message& a, message& b,int j)//将b中的内容深拷贝至a
+{
+	char* ta = (char*)&a;
+	char* tb = (char*)&b;
+	for (int i = 0; i < sizeof(message); i++)
+	{
+		ta[i] = tb[i];
+	}
+}
+void message::copy(message& a, message& b)//将b中的内容深拷贝至a
+{
+	char* ta = (char*)&a;
+	char* tb = (char*)&b;
+	for (int i = 0; i < sizeof(message); i++)
+	{
+		ta[i] = tb[i];
+	}
+}
