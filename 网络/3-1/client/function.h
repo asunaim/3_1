@@ -13,18 +13,17 @@ void simplesend(message& a)
 {
 	a.set_exist();
 	a.setchecksum();
-	//a.checkchecksum();
 	if (sendto(sock, (char*)&a, sizeof(message), 0, (struct sockaddr*)&addr, sizeof(sockaddr)) == SOCKET_ERROR);
 	{
 	}
-	if (a.flag) { cout << "发送 "; a.print(); }
+	//if (a.flag) { cout << "发送 "; a.print(); }
 }
 
 void simplerecv(message& a)
 {
 	memset(a.msg, 0, sizeof(a.msg));
 	recvfrom(sock, (char*)&a, sizeof(message), 0, (struct sockaddr*)&addr, &addr_len);
-	if (a.flag) { cout << "接收 "; a.print(); }
+	//if (a.flag) { cout << "接收 "; a.print(); }
 }
 
 

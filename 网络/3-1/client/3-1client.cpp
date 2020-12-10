@@ -31,15 +31,19 @@ int main()
 	}
 
 	//初始化地址
-	addrop.sin_addr.s_addr = inet_addr("127.0.0.1");
+	addrop.sin_addr.s_addr = inet_addr("192.168.89.1");
 	addrop.sin_family = AF_INET;
 	addrop.sin_port = htons(CPORT);
 
 
-	addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+	addr.sin_addr.s_addr = inet_addr("192.168.89.1");
 	addr.sin_family = AF_INET;
+	addr.sin_port = htons(SPORT);
 
-	addr.sin_port = htons(7777);
+	//addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+	//addr.sin_family = AF_INET;
+
+	//addr.sin_port = htons(7777);
 
 	int len = sizeof(SOCKADDR_IN);
 	//绑定
@@ -49,6 +53,40 @@ int main()
 		cout << "bind error" << endl; return -1;
 	}*/
 
+
+	cout << "是否使用默认IP？是1，否2";
+	int i;
+	cin >> i;
+	if (i == 2)
+	{
+		char s[20] = {};
+		char c[20] = {};
+		cout << "请输入服务器IP: ";
+		cin >> s;
+		cout << "请输入客户端IP: ";
+		cin >> c;
+		addrop.sin_addr.s_addr = inet_addr(c);
+		addr.sin_addr.s_addr = inet_addr(s);
+	}
+
+
+
+	//while (1)
+	//{
+	//	message a;
+	//	simplerecv(a);
+	//	cout << a.msg;
+	//}
+
+	//message b;
+	//simplerecv(b);
+	//message a;
+	//strcpy(a.msg, "ihihihih");
+	//for (int i = 0; i < 1817; i++)
+	//{
+	//	cout << "发送" << endl;
+	//	simplesend(a);
+	//}
 	cout << "client3-1" << endl;
 
 	while (1)

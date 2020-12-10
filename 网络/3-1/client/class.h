@@ -47,7 +47,7 @@ struct message//报文格式
 	int flag;//标志位
 	DWORD SendIP, RecvIP;
 	int msgseq;
-	int length;
+	//int length;
 	int SendPort, RecvPort;
 	int ackseq;
 	//int synseq;
@@ -103,6 +103,10 @@ struct filepacket//拷贝文件内容时需要的信息
 
 message::message() {
 	memset(this, 0, sizeof(message));//初始化全0
+	SendPort = CPORT;
+	RecvPort = SPORT;
+	SendIP = addr.sin_addr.s_addr;
+	RecvIP = addrop.sin_addr.s_addr;
 }
 
 void message::set_send_ip(char* s) {}
