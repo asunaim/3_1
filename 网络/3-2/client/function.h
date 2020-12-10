@@ -22,13 +22,7 @@ void simplesend(message& a)
 		DWORD dwError = WSAGetLastError();
 		cout << dwError << endl;*/
 	}
-	//if (a.flag) { 
-	//	mutex mxt;
-	//	//mxt.lock();
-	//	cout << "发送 ";
-	//	a.print();
-	//	//mxt.unlock();
-	//}
+	if (a.flag) { cout << "发送 "; a.print(); }
 	//clock_t end = clock();
 	//double endtime = (double)(end - start) / CLOCKS_PER_SEC;
 	//cout << "time:" << endtime << endl;		//s为单位
@@ -38,12 +32,7 @@ void simplerecv(message& a)
 {
 	memset(a.msg, 0, sizeof(a.msg));
 	recvfrom(sock, (char*)&a, sizeof(message), 0, (struct sockaddr*)&addr, &addr_len);
-	//if (a.flag) { 
-	//	mutex mut;
-	//	//mut.lock();
-	//	cout << "接收s "; a.print(); cout << a.msg;
-	//	//mut.unlock();
-	//}
+	if (a.flag) { cout << "接收 "; a.print(); }
 }
 
 

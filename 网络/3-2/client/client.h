@@ -117,8 +117,7 @@ DWORD WINAPI recvhandler(LPVOID lparam)
 {
 	int i = (int)(LPVOID)lparam;
 	//cout << "接收" << i << endl;
-
-
+	clock_t finalovertime;
 	while (base < buffersize)
 	{
 		if (sendnextseq > base + N||sendnextseq==base)//窗口已满（对方还没有发送ack）或者窗口为空
@@ -130,14 +129,21 @@ DWORD WINAPI recvhandler(LPVOID lparam)
 		{
 			//cout << "receive" << endl;
 			clockstart = clock();//重置计时器
-			if (a.ackseq >= base)//收到正确的消息序号
+			if (a.ackseq == base)//收到正确的消息序号
 			{
 				base++;
 				overtime = 0;
+				//flag = 0;
+			}
+			else if (a.ackseq < base)//前面的ack丢包
+			{
+				base = a.ackseq;//状态退回
+				overtime = 1;
 			}
 			else 
 			{
 				overtime = 1;//重传所有已发送未确认的分组
+				//flag++
 			}
 		}
 		clockend = clock();
@@ -145,11 +151,18 @@ DWORD WINAPI recvhandler(LPVOID lparam)
 		{
 			//超时，加锁
 			overtime = 1;
+			//flag++;
 		}
 		//mxt.~mutex();
+		finalovertime = clock();
+		if ((clockend - clockstart) / CLOCKS_PER_SEC >= WAIT_TIME*SENT_TIMES)
+		{
+			overtime = 2;
+			return 0;
+		}
 	}
 	cout << "exitpoint2" << endl;
-	return 0;
+	return 1;
 }
 
 
@@ -181,7 +194,7 @@ DWORD WINAPI sendhandler(LPVOID lparam)//发线程
 				//double endtime = (double)(end - start) / CLOCKS_PER_SEC;
 				//cout << "time:" << endtime << endl;		//s为单位
 			}
-		if (overtime)//这一部分需要加锁，运行此部分
+		if (overtime==1)//这一部分需要加锁，运行此部分
 		{
 			for (int i = base; i < sendnextseq; i++)
 			{
@@ -190,6 +203,8 @@ DWORD WINAPI sendhandler(LPVOID lparam)//发线程
 				//cout << "xxxxxxxxxxx" << endl;
 			}
 		}
+		if (overtime == 2)
+			return 0;//断网啦别发了
 	}
 	cout << "exitpoint1" << endl;
 	return 0;

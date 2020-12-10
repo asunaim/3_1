@@ -61,15 +61,18 @@ int main()
 	clock_t end = clock();
 	double endtime = (double)(end - start) / CLOCKS_PER_SEC;
 	cout << endtime << endl;*/
-	cout << "client" << endl;
+	cout << "client3-2" << endl;
 	int i = 0;
 	while (1)
 	{
-		char name[30] = { "2.jpg" };
-		/*cout << "请输入文件名 ";
+		int op;
+		cout << "传输文件1，退出0 ";
+		cin >> op;
+		if (op == 0)
+			break;
+		char name[30];
+		cout << "请输入文件名 ";
 		cin >> name;
-		if (name == "quit")
-			break;*/
 		buildconnectionCli();
 		sendfile(name);
 		byecli();
@@ -93,9 +96,10 @@ int main()
 		cout << "Total time:" << endtime << endl;		//s为单位
 		cout << "吞吐率：" << (double)(buffersize) * sizeof(message)/endtime * 8 / 1024 / 1024 << "Mbps" << endl;
 
-		//Sleep(2000);
-		//cout << "exitpoint3" << endl;
-		break;
+		memset(name, 0, sizeof(name));
+		buffersize = 0;
+		base = 0;
+		sendnextseq = 0;
 	}
 
 	closesocket(sock);
