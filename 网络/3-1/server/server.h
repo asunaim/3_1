@@ -4,19 +4,12 @@
 
 int tackle(message b);//处理收到的报文
 
-int buildconnectionSer();//服务端建立连接
+int buildconnectionSer(message t);//服务端建立连接
 void outfile(char* name, char content[10000][1024], int length, int& index);//将收到的字符串转化成文件
 int recvfile(message a);//接收文件并存入数组
-int byeser();//四次挥手
+int byeser(message t);//四次挥手
 
 //////////////////////////////////////////////////
-
-
-
-
-
-
-
 
 
 
@@ -24,17 +17,34 @@ int tackle(message b)//处理收到的报文
 {
 	if (b.get_syn())
 	{
-		if (buildconnectionSer())
+		if (buildconnectionSer(b))
+		{
+			status = 1;
 			cout << "建立连接" << endl;
+		}
 		else cout << "连接建立失败" << endl;
 	}
 	else if (b.get_startfile())
 	{
-		recvfile(b);
+		if (status)
+			recvfile(b);
+		else cout << "请先建立连接" << endl;
 	}
 	if (b.get_fin())
 	{
-		byeser();
+		if (status)
+		{
+			if (byeser(b)) {
+				status = 0;
+
+			}
+		}
+		else cout << "未连接" << endl;
+		cout << "对方已经断开连接，是否结束程序？0退出，1不退出 ";
+		int i;
+		cin >> i;
+		if (i == 0)
+			return 0;
 	}
 	return 1;
 }
@@ -44,42 +54,12 @@ int tackle(message b)//处理收到的报文
 
 
 
-int buildconnectionSer()//服务端建立连接
+int buildconnectionSer(message t)//服务端建立连接
 {
 	message a,b;
-	a.set_ack(); a.set_syn();
+	a.set_ack(t);
+	a.msgseq = sendseq++;
 	simplesend(a);
-	clockstart = clock();
-	int flag = 0;//重发超过10次退出
-	while (1)
-	{
-		simplerecv(b);
-		int check=1;
-		if (b.get_exist())
-		{
-			check = b.checkchecksum();
-			if (b.get_ack() && check)//b包含对消息a的ack和syn
-				break;
-		}
-		clockend = clock();
-		if (flag == SENT_TIMES)
-		{
-			cout << "连接建立失败" << endl;
-			return 0;
-		}
-		if ((clockend - clockstart) / CLOCKS_PER_SEC >= WAIT_TIME||b.get_nak())
-		{
-			flag++;
-			clockstart = clock();
-			simplesend(a);//重传
-		}
-		if (!check)
-		{
-			flag++;
-			clockstart = clock();
-			simplesend(a);//重传
-		}
-	}
 	cout << "连接成功";
 	return 1;
 }
@@ -88,7 +68,8 @@ int buildconnectionSer()//服务端建立连接
 int recvfile(message a)
 {
 	message t;
-	t.set_ack();
+	t.set_ack(a);
+	a.msgseq = sendseq++;
 	simplesend(t);
 	
 	int index = a.index;
@@ -154,15 +135,11 @@ void outfile(char* name, char content[10000][1024], int length, int& index)
 	fout.close();
 }
 
-int byeser()//三次挥手,已经收到以此fin
+int byeser(message t)//三次挥手,已经收到以此fin
 {
-	message a, b, c;
-	a.set_fin();
-	if (stopwaitsend(a, b))
-	{
-		cout << "连接断开成功" << endl;
-		return 1;
-	}
-	else cout << "连接断开失败" << endl;
-	return 0;
+	message a;
+	a.set_ack(t);
+	a.msgseq = sendseq++;
+	simplesend(a);
+	return 1;
 }

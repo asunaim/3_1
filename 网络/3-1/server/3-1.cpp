@@ -37,7 +37,7 @@ int main()
 	if (setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout)) == -1) {
 		cout << "setsockopt failed:";
 	}
-	cout << "re" << endl;
+	cout << "server3-1" << endl;
 	//初始化地址
 	addrop.sin_addr.s_addr = inet_addr("192.168.89.1");
 	addrop.sin_family = AF_INET;
@@ -47,6 +47,24 @@ int main()
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(CPORT);
 
+	//addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+	//addr.sin_family = AF_INET;
+	//addr.sin_port = htons(7777);
+
+	cout << "是否使用默认IP？是1，否2";
+	int i;
+	cin >> i;
+	if (i == 2)
+	{
+		char s[20] = {};
+		char c[20] = {};
+		cout << "请输入服务器IP: " ;
+		cin >> s;
+		cout << "请输入客户端IP: ";
+		cin >> c;
+		addrop.sin_addr.s_addr = inet_addr(s);
+		addr.sin_addr.s_addr = inet_addr(c);
+	}
 
 
 
@@ -58,38 +76,35 @@ int main()
 		cout << "bind error" << endl; return -1;
 	}
 
+
+	//message b;
+	//simplerecv(b);
+	//message a;
+	//strcpy(a.msg, "ihihihih");
+	//for (int i = 0; i < 1817; i++)
+	//{
+	//	cout << "发送" << endl;
+	//	simplesend(a);
+	//}
+
 	//while (1)
 	//{
-	//	message b;
-	//	
-	//	//simplerecv(b);
-
-	//	if (b.get_exist())
-	//	{
-	//		cout << (char*)&b << endl;
-	//		if (!tackle(b))
-	//			break;//挥手 连接中断
-	//	}
-	//	//Sleep(200);
+	//	message a;
+	//	simplerecv(a);
+	//	cout << a.msg;
 	//}
+
 
 	while (1)
 	{
 		message b;
-		//cout << "1";
-		//strcpy_s(b.msg, "xxxxxxxx");
-		//b.set_ack();
-		//b.set_fin();
-		////b.checksum = 235;
-		//u_char* a ;
-		//a = (u_char*)&b;
 		simplerecv(b);
 		if (b.get_exist())
 		{
 			//cout << b.msg << endl;
-			tackle(b);
+			if(!tackle(b))break;
 		}
-		Sleep(2000);
+		Sleep(20);
 	}
 	closesocket(sock);
 	WSACleanup();
