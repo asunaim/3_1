@@ -3,7 +3,6 @@
 
 
 
-
 int main()
 {
 	//加载socket库
@@ -23,7 +22,7 @@ int main()
 		return -1;
 	}
 
-	// 设置超时
+	// recv非阻塞
 	struct timeval timeout;
 	timeout.tv_sec = 1;//秒
 	timeout.tv_usec = 0;//微秒
@@ -32,105 +31,58 @@ int main()
 	}
 
 	//初始化地址
-	addrop.sin_addr.s_addr = inet_addr("192.168.89.1");
+	addrop.sin_addr.s_addr = inet_addr("127.0.0.1");
 	addrop.sin_family = AF_INET;
 	addrop.sin_port = htons(CPORT);
 
 
-	addr.sin_addr.s_addr = inet_addr("192.168.89.1");
+	addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 	addr.sin_family = AF_INET;
-	addr.sin_port = htons(SPORT);
+
+	addr.sin_port = htons(7777);
 
 	int len = sizeof(SOCKADDR_IN);
 	//绑定
 	//强制类型转换，SOCKADDR_IN方便赋值 SOCKADDR方便传输
-	if (bind(sock, (SOCKADDR*)&addrop, sizeof(SOCKADDR)) == -1)
+	/*if (bind(sock, (SOCKADDR*)&addrop, sizeof(SOCKADDR)) == -1)
 	{
 		cout << "bind error" << endl; return -1;
-	}
+	}*/
 
-	////绑定
-	////强制类型转换，SOCKADDR_IN方便赋值 SOCKADDR方便传输
-	//if (bind(serversocket, (SOCKADDR*)&addrSer, sizeof(SOCKADDR)) == -1)
-	//{
-	//	cout << "bind error" << endl; return -1;
-	//}
-
-	//while (1)
-	//{
-	//	/*cout << "sending";
-	//	char sendBuf[BUF_SIZE] = {};
-	//	if(sendto(sock, "hi", 1024, 0, (struct sockaddr*)&addrSer,sizeof(sockaddr))==SOCKET_ERROR);
-	//	{
-	//		cout << "发送失败" << endl;
-	//		DWORD dwError = WSAGetLastError();
-	//		cout << dwError<<endl;
-	//	}*/
-	//	message a;
-	//	strcpy_s(a.msg, "hihihi");
-	//	simplesend(a);
-	//	Sleep(2000);
-	//}
-	
-	//while (1)
-	//{
-	//	message b;
-	//	strcpy_s(b.msg, "xxxxxxxx");
-	//	simplesend(b);
-	//	/*if (b.exist)
-	//	{
-	//		cout << b.msg << endl;
-	//	}*/
-	//}
-
-	//while (1)
-	//{
-	//	message b;
-	//	strcpy_s(b.msg, "xxxxxxxx");
-	//	b.exist = 1;
-	//	simplesend(b);
-	//	
-	//	//if (b.exist)
-	//	//{
-	//	//	cout << b.msg << endl;
-	//	//		//break;//挥手 连接中断
-	//	//}
-	//	Sleep(2000);
-	//}
-
-
+	cout << "client3-1" << endl;
 
 	while (1)
 	{
-		cout << "建立连接1 发送文件2 断开连接3 请选择操作：";
+
 		int op;
+		cout << "请选择操作：传输文件1，退出0 " << endl;
 		cin >> op;
-		switch (op)
+		if (op == 0)
+			break;
+		else if (op != 1)
+			cout << "无效操作" << endl;
+		else if (op == 1)
 		{
-		case 1:
-		{
-			buildconnectionCli(); 
-			continue;
-		}
-		case 2:
-		{
-			char name[100];
-			cout << endl << "请输入文件名：";
+			cout << "请输入文件名 " << endl;
+			char name[30] = {};
 			cin >> name;
-			sendfile(name);
-			continue;
-		}
-		case 3:
-		{
-			byecli();
-			goto a;
-		}
+			if (buildconnectionCli())
+			{
+				if (sendfile(name))
+				{
+					cout << "文件发送成功" << endl;
+				}
+				else cout << "文件发送失败" << endl;
+			}
+			else cout << "连接建立失败" << endl;
+			if (byecli())
+			{
+				cout << "连接已断开" << endl;
+			}
+			else cout << "连接断开失败" << endl;
 		}
 	}
 	
-	/*char* name=new char[10];
-	strcpy(name, "helloworld.txt");
-	*/
 	
 a:	closesocket(sock);
 	WSACleanup();

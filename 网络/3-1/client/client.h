@@ -15,46 +15,9 @@ int buildconnectionCli()//客户端，连接发起方
 {
 	message a, b;
 	a.set_syn();
-	simplesend(a);
-	clockstart = clock();
-	int flag = 0;//重发超过10次退出
-	while (1)
-	{
-		simplerecv(b);
-		Sleep(2000);
-		int check=1;
-		if (b.get_exist())
-		{
-			check = b.checkchecksum();
-			if (b.get_ack()&&check)//b包含对消息a的ack和syn
-				break;
-		}
-		clockend = clock();
-		if (flag == SENT_TIMES)
-		{
-			cout << "连接失败" << endl;
-			return 0;
-		}
-		if ((clockend - clockstart) / CLOCKS_PER_SEC >= WAIT_TIME||b.get_nak())
-		{
-			flag++;
-			clockstart = clock();
-			simplesend(a);//重传
-		}
-		if (!check)
-		{
-			message c;
-			c.set_nak();
-			flag++;
-			clockstart = clock();
-			simplesend(c);
-		}
-	}
-	message c;
-	c.set_ack();
-	simplesend(c);
-
-	cout << "连接成功"<<endl;
+	a.msgseq = sendseq++;
+	if (stopwaitsend(a, b))return 1;
+	else return 0;
 }
 
 int sendfile(char* name)//发送文件
@@ -66,6 +29,7 @@ int sendfile(char* name)//发送文件
 	 int index = 0;
 
 	readfile( name,content,length,index);
+	clock_t timestart = clock();
 	message a;
 	a.index = index;
 	a.filelength = length;
@@ -74,6 +38,7 @@ int sendfile(char* name)//发送文件
 		a.msg[i]=name[i];//。msg已经初始化全部为0
 	a.set_startfile();
 	message b;
+	a.msgseq = sendseq++;
 	if (!stopwaitsend(a, b))//发送消息a
 	{
 		cout << "文件传输失败" << endl;
@@ -94,12 +59,17 @@ int sendfile(char* name)//发送文件
 				temp.msg[j] = content[i][j];
 		}
 		//strcpy(temp.msg, content[i]);
+		temp.msgseq = sendseq++;
 		if (stopwaitsend(temp,b)== 0)
 		{
 			cout << "文件发送失败" << endl;
 			return 0;
 		}
 	}
+	clock_t timeend = clock();
+	double endtime = (double)(timeend - timestart) / CLOCKS_PER_SEC;
+	cout << "Total time:" << endtime << endl;		//s为单位
+	cout << "吞吐率：" << (double)(index + 1) * sizeof(message) * 8/endtime /1024/1024<< "Mbps" << endl;
 	cout << "文件发送成功" << endl;
 	return 1;
 
@@ -143,32 +113,25 @@ void readfile(char* name,char content[10000][1024],int &length,  int  & index)
 int byecli()//四次挥手
 {
 	//第一次挥手，发送FIN
-	message a,b,c;
+	message a,b;
 	a.set_fin();//第一次
-	simplesend(a);
+	a.msgseq = sendseq++;
+	if (stopwaitsend(a, b))return 1;
+	else return 0;
 
-
-	if (stopwaitrecv(b, c))//收到的消息写入b中，第二次和第三次
-	{
-		if (b.get_fin())//返回fin，
-		{
-			message d;
-			d.set_ack();
-			simplesend(d);
-			{
-				cout << "成功断开连接" << endl;
-				return 1;
-			}
-		}
-		else
-		{
-			cout << "断开连接失败" << endl;
-			return 0;
-		}
-	}
-	else
-	{
-		cout << "断开连接失败" << endl;
-		return 0;
-	}
+	//if (stopwaitrecv(b, c))//收到的消息写入b中，第二次和第三次
+	//{
+	//		message d;
+	//		d.set_ack(b);
+	//		simplesend(d);
+	//		{
+	//			cout << "成功断开连接" << endl;
+	//			return 1;
+	//		}
+	//}
+	//else
+	//{
+	//	cout << "断开连接失败" << endl;
+	//	return 0;
+	//}
 }
