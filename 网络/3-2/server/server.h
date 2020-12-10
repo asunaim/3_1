@@ -133,12 +133,12 @@ int byeser()//三次挥手,已经收到以此fin
 //处理接收到的文件消息
 DWORD WINAPI filehandler(LPVOID lparam)
 {
-	/*filepacket* pkt = (filepacket*)(LPVOID)lparam;
+	filepacket* pkt = (filepacket*)(LPVOID)lparam;
 	memset(content[pkt->index], 0, 1024);
 	for(int j=0;j<pkt->length;j++)
 	{
 		content[pkt->index][j] = pkt->a.msg[j];
-	}*/
+	}
 	return 0;
 }
 

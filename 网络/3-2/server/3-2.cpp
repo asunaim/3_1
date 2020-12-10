@@ -37,13 +37,13 @@ int main()
 	//if (setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout)) == -1) {
 	//	cout << "setsockopt failed:";
 	//}
-	cout << "server" << endl;
+	cout << "server3-2" << endl;
 	//初始化地址
 	addrop.sin_addr.s_addr = inet_addr("192.168.89.1");
 	addrop.sin_family = AF_INET;
 	addrop.sin_port = htons(SPORT);
 
-	addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+	addr.sin_addr.s_addr = inet_addr("192.168.89.1");
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(CPORT);
 
@@ -72,63 +72,130 @@ int main()
 
 
 	clockstart = clock();
-
 	while (1)
 	{
-		//message a, b;
-		//msgrecv[recvnextseq]
-		simplerecv(msgrecv[recvnextseq]);
-		if (msgrecv[recvnextseq].get_exist())//收到消息且顺序正确
+		int op;
+		cout << "接收文件1，退出0" << endl;
+		cin >> op;
+		if (op == 0)
+			break;
+		while (1)
 		{
-			//cout << "status " << status << endl;
-			if (msgrecv[recvnextseq].msgseq == recvnextseq)
+			//message a, b;
+			//msgrecv[recvnextseq]
+			simplerecv(msgrecv[recvnextseq]);
+			if (msgrecv[recvnextseq].get_exist())//收到消息且顺序正确
 			{
-				message b;
-				b.set_ack();
-				b.ackseq = recvnextseq;
-				simplesend(b);
-				
-				//cout << "recvnextseq" << recvnextseq << endl;
-				clockstart = clock();
-
-				if (status && msgrecv[recvnextseq].get_fin())
+				//cout << "status " << status << endl;
+				if (msgrecv[recvnextseq].msgseq == recvnextseq)
 				{
-					status = 0;
-					cout << "断开连接" << endl;
-					break;//可以断开连接
+					message b;
+					b.set_ack();
+					b.ackseq = recvnextseq;
+					simplesend(b);
+					clockstart = clock();
+					//cout << "recvnextseq" << recvnextseq << endl;
+
+
+					if (status && msgrecv[recvnextseq].get_fin())
+					{
+						status = 0;
+						cout << "断开连接" << endl;
+						break;//可以断开连接
+					}
+					else
+					{
+						//hThread1 = ::CreateThread(NULL, NULL, filehandler, LPVOID((char*)&msgrecv[recvnextseq]), 0, &dwThreadId1);
+						if (msgrecv[recvnextseq].get_syn())
+						{
+							if (!buildconnectionSer())
+								return 0;
+							else status = 1;
+						}
+						else if (status && msgrecv[recvnextseq].get_startfile())
+						{
+							//cout << "接收文件" << endl;
+							memset(name, 0, sizeof(name));
+							filestatus = 1;
+							index = msgrecv[recvnextseq].index;
+							length = msgrecv[recvnextseq].filelength;
+							strcpy(name, msgrecv[recvnextseq].msg);
+						}
+						else if (status && filestatus && msgrecv[recvnextseq].get_endfile())//文件发送结束
+						{
+							//cout << "接收文件" << endl;
+							filestatus = 0;
+
+							if (fileseq != index)
+							{
+								cout << "出错" << endl;
+								return 0;
+							}
+							filepacket* packet = new filepacket;
+							packet->a = msgrecv[recvnextseq];
+							packet->index = index;
+							packet->length = length;
+
+							/*for (int i = 0; i < length; i++)
+							{
+								content[index][i] = msgrecv[recvnextseq].msg[i];
+							}*/
+							//
+							hThread1 = ::CreateThread(NULL, NULL, filehandler, LPVOID(packet), 0, &dwThreadId1);
+							//WaitForSingleObject(hThread1, 1000);
+							fileseq++;
+							fileseq = 0;
+							//
+
+							cout << "文件接收结束" << endl;
+						}
+						else if (status && filestatus)
+						{
+							fileseq++;
+
+							filepacket* packet = new filepacket;
+							packet->a = msgrecv[recvnextseq];
+							packet->index = fileseq - 1;
+							packet->length = 1024;
+
+							/*for (int i = 0; i < 1024; i++)
+							{
+								content[fileseq - 1][i] = msgrecv[recvnextseq].msg[i];
+							}*/
+							hThread1 = ::CreateThread(NULL, NULL, filehandler, LPVOID(packet), 0, &dwThreadId1);
+							//WaitForSingleObject(hThread2, 1000);
+						}
+
+					}
+					recvnextseq++;
 				}
-				else
+				else//消息乱序
 				{
-					hThread1 = ::CreateThread(NULL, NULL, filehandler, LPVOID((char*)&msgrecv[recvnextseq]), 0, &dwThreadId1);
-				}	
-				recvnextseq++;
+					message a;
+					a.set_ack();
+					a.ackseq = recvnextseq - 1;
+					simplesend(a);
+				}
 			}
-			else//消息乱序
+			else
 			{
-				message a;
-				a.set_ack();
-				a.ackseq = recvnextseq-1;
-				simplesend(a);
+				clockend = clock();
+				if (status && (clockend - clockstart) / CLOCKS_PER_SEC >= WAIT_TIME && recvnextseq)//需要接收到消息且超时
+				{
+					message a;
+					a.ackseq = recvnextseq - 1;
+					a.set_ack();
+				}
 			}
+			//Sleep(20);
+
 		}
-		else
-		{
-			clockend = clock();
-			if (status&&(clockend - clockstart) / CLOCKS_PER_SEC >= WAIT_TIME && recvnextseq)//需要接收到消息且超时
-			{
-				message a;
-				a.ackseq = recvnextseq - 1;
-				a.set_ack();
-			}
-		}
-		//Sleep(20);
+
+		WaitForSingleObject(hThread1, INFINITE);
+		//WaitForSingleObject(hThread2, INFINITE);
+		outfile(name, content, length, index);
+
 	}
-
-	WaitForSingleObject(hThread1, INFINITE);
-	//WaitForSingleObject(hThread2, INFINITE);
-	outfile(name, content, length, index);
-
-
 	closesocket(sock);
 	WSACleanup();
 	return 0;
