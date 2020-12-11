@@ -21,7 +21,7 @@ int recvseq = 0;
 #define SPORT 30000
 #define CPORT 6666
 #define BUF_SIZE 1024
-#define WAIT_TIME 5//1s
+#define WAIT_TIME 1//1s
 #define SENT_TIMES 8//最多八次重传
 #define FILE_PACKET_LENGTH 1024
 //线程

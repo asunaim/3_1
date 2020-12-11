@@ -43,13 +43,13 @@ int main()
 	addrop.sin_family = AF_INET;
 	addrop.sin_port = htons(SPORT);
 
-	//addr.sin_addr.s_addr = inet_addr("192.168.89.1");
-	//addr.sin_family = AF_INET;
-	//addr.sin_port = htons(CPORT);
-
 	addr.sin_addr.s_addr = inet_addr("192.168.89.1");
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(CPORT);
+
+	//addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+	//addr.sin_family = AF_INET;
+	//addr.sin_port = htons(7777);
 
 
 
@@ -97,11 +97,7 @@ int main()
 	clockstart = clock();
 	while (1)
 	{
-		int op;
-		cout << "接收文件1，退出0" << endl;
-		cin >> op;
-		if (op == 0)
-			break;
+		
 		while (1)
 		{
 			//message a, b;
@@ -111,7 +107,7 @@ int main()
 			if (msgrecv[recvnextseq].get_exist())//收到消息且顺序正确
 			{
 				//cout << "status " << status << endl;
-				if (msgrecv[recvnextseq].msgseq == recvnextseq)
+				if (msgrecv[recvnextseq].msgseq == recvnextseq&&msgrecv[recvnextseq].checkchecksum())
 				{
 					message b;
 					b.set_ack();
@@ -227,7 +223,11 @@ int main()
 		//WaitForSingleObject(hThread2, INFINITE);
 		//strcpy(name, "3.jpg");
 		outfile(name, content, length, index);
-
+		int op;
+		cout << "接收文件1，退出0" << endl;
+		cin >> op;
+		if (op == 0)
+			break;
 	}
 	closesocket(sock);
 	WSACleanup();

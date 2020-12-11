@@ -32,14 +32,6 @@ void simplerecv(message& a)
 }
 
 
-bool check(message a, message b)
-{
-	/*if (b.get_ack() == 1 && b.ackseq == a.msgseq)
-		return 1;
-	else return 0;*/
-	return 1;
-}
-
 
 bool stopwaitsend(message& a, message b)//a写入待发送消息，如果收到对方返回的ack则成功
 {
