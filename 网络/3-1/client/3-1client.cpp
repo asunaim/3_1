@@ -116,9 +116,11 @@ int main()
 			if (byecli())
 			{
 				cout << "连接已断开" << endl;
+				sendseq = 0;
 			}
 			else cout << "连接断开失败" << endl;
 		}
+		sendseq = 0;
 	}
 	
 	
