@@ -5,7 +5,7 @@
 int tackle(message b);//处理收到的报文
 
 int buildconnectionSer(message t);//服务端建立连接
-void outfile(char* name, char content[10000][1024], int length, int& index);//将收到的字符串转化成文件
+void outfile(char* name, char content[50000][1024], int length, int& index);//将收到的字符串转化成文件
 int recvfile(message a);//接收文件并存入数组
 int byeser(message t);//四次挥手
 
@@ -27,7 +27,10 @@ int tackle(message b)//处理收到的报文
 	else if (b.get_startfile())
 	{
 		if (status)
+		{
+			cout << "开始接收文件" << endl;
 			recvfile(b);
+		}
 		else cout << "请先建立连接" << endl;
 	}
 	if (b.get_fin())
@@ -36,7 +39,7 @@ int tackle(message b)//处理收到的报文
 		{
 			if (byeser(b)) {
 				status = 0;
-
+				sendseq = 0;
 			}
 		}
 		else cout << "未连接" << endl;
@@ -122,7 +125,7 @@ int recvfile(message a)
 
 
 
-void outfile(char* name, char content[10000][1024], int length, int& index)
+void outfile(char* name, char content[50000][1024], int length, int& index)
 {
 	ofstream fout(name, ofstream::binary);
 	for (int i = 0; i < index; i++)

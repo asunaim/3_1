@@ -34,7 +34,7 @@ int overtime = 0;//超时标识，用于线程间通信
 int addr_len = sizeof(struct sockaddr_in);
 SOCKET sock;
 SOCKADDR_IN addrop, addr;//ip+端口号
-char content[10000][1024];
+char content[50000][1024];
 int status = 0;
 //int base, sendnextseq, recvnextseq;
 //int  N = 10;//窗口大小
