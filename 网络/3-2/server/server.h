@@ -12,7 +12,7 @@ message msgrecv[10000];
 
 int tackle(message b);//处理收到的报文
 int buildconnectionSer();//服务端建立连接
-void outfile(char* name, char content[10000][1024], int length, int& index);//将收到的字符串转化成文件
+void outfile(char* name, char content[50000][1024], int length, int& index);//将收到的字符串转化成文件
 int recvfile(message a);//接收文件并存入数组
 int byeser();//四次挥手
 
@@ -108,7 +108,7 @@ int recvfile(message a)
 }
 
 
-void outfile(char* name, char content[10000][1024], int length, int& index)
+void outfile(char* name, char content[50000][1024], int length, int& index)
 {
 	ofstream fout(name, ofstream::binary);
 	for (int i = 0; i < index; i++)

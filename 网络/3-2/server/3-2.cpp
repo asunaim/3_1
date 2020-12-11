@@ -39,14 +39,17 @@ int main()
 	//}
 	cout << "server3-2" << endl;
 	//初始化地址
-	addrop.sin_addr.s_addr = inet_addr("192.168.89.1");
+	addrop.sin_addr.s_addr = inet_addr("127.0.0.1");
 	addrop.sin_family = AF_INET;
 	addrop.sin_port = htons(SPORT);
+
+	//addr.sin_addr.s_addr = inet_addr("192.168.89.1");
+	//addr.sin_family = AF_INET;
+	//addr.sin_port = htons(CPORT);
 
 	addr.sin_addr.s_addr = inet_addr("192.168.89.1");
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(CPORT);
-
 
 
 
@@ -57,6 +60,26 @@ int main()
 	{
 		cout << "bind error" << endl; return -1;
 	}
+
+
+
+
+	cout << "是否使用默认IP？是1，否2";
+	int i;
+	cin >> i;
+	if (i == 2)
+	{
+		char s[20] = {};
+		char c[20] = {};
+		cout << "请输入服务器IP: " ;
+		cin >> s;
+		cout << "请输入客户端IP: ";
+		cin >> c;
+		addrop.sin_addr.s_addr = inet_addr(s);
+		addr.sin_addr.s_addr = inet_addr(c);
+	}
+
+	
 
 
 	//message b;
@@ -83,6 +106,7 @@ int main()
 		{
 			//message a, b;
 			//msgrecv[recvnextseq]
+			int flag = 0;
 			simplerecv(msgrecv[recvnextseq]);
 			if (msgrecv[recvnextseq].get_exist())//收到消息且顺序正确
 			{
@@ -101,6 +125,10 @@ int main()
 					{
 						status = 0;
 						cout << "断开连接" << endl;
+						memset(msgrecv, 0, sizeof(msgrecv));
+						recvnextseq = 0;//重置
+						filestatus = 0;
+						fileseq = 0;
 						break;//可以断开连接
 					}
 					else
@@ -114,7 +142,7 @@ int main()
 						}
 						else if (status && msgrecv[recvnextseq].get_startfile())
 						{
-							//cout << "接收文件" << endl;
+							cout << "接收文件" << endl;
 							memset(name, 0, sizeof(name));
 							filestatus = 1;
 							index = msgrecv[recvnextseq].index;
@@ -171,10 +199,14 @@ int main()
 				}
 				else//消息乱序
 				{
-					message a;
-					a.set_ack();
-					a.ackseq = recvnextseq - 1;
-					simplesend(a);
+					if (flag % 3 == 0)
+					{
+						message a;
+						a.set_ack();
+						a.ackseq = recvnextseq - 1;
+						simplesend(a);
+					}
+					flag++;
 				}
 			}
 			else
@@ -193,6 +225,7 @@ int main()
 
 		WaitForSingleObject(hThread1, INFINITE);
 		//WaitForSingleObject(hThread2, INFINITE);
+		//strcpy(name, "3.jpg");
 		outfile(name, content, length, index);
 
 	}

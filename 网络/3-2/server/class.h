@@ -31,7 +31,7 @@ int recvseq = 0;
 int addr_len = sizeof(struct sockaddr_in);
 SOCKET sock;
 SOCKADDR_IN addrop, addr;//ip+端口号
-char content[10000][1024];
+char content[50000][1024];
 int base, sendnextseq, recvnextseq;
 int  N = 10;
 int status = 0;//标识server状态
@@ -103,6 +103,10 @@ struct filepacket//拷贝文件内容时需要的信息
 
 message::message() {
 	memset(this, 0, sizeof(message));//初始化全0
+	SendPort = SPORT;
+	RecvPort = CPORT;
+	SendIP = addr.sin_addr.s_addr;
+	RecvIP = addrop.sin_addr.s_addr;
 }
 
 void message::set_send_ip(char* s) {}
@@ -208,7 +212,7 @@ void message::setchecksum()
 {
 	int sum = 0;
 	u_char* temp = (u_char*)this;
-	for (int i = 0; i < 16; i++)
+	for (int i = 0; i < 20; i++)
 	{
 		sum += temp[2 * i] << 8 + temp[2 * i + 1];
 		while (sum >= 0x10000)
@@ -226,7 +230,7 @@ bool message::checkchecksum()
 {
 	int sum = 0;
 	u_char* temp = (u_char*)this;
-	for (int i = 0; i < 16; i++)
+	for (int i = 0; i < 20; i++)
 	{
 		sum += temp[2 * i] << 8 + temp[2 * i + 1];
 		while (sum >= 0x10000)
