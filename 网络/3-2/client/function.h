@@ -12,10 +12,8 @@ bool stopwaitrecv(message& a, message b);
 
 void simplesend(message& a)
 {
-	/*clock_t start = clock();*/
 	a.set_exist();
 	a.setchecksum();
-	//a.checkchecksum();
 	if (sendto(sock, (char*)&a, sizeof(message), 0, (struct sockaddr*)&addr, sizeof(sockaddr)) == SOCKET_ERROR);
 	{
 		/*cout << "发送失败" << endl;
@@ -23,9 +21,7 @@ void simplesend(message& a)
 		cout << dwError << endl;*/
 	}
 	//if (a.flag) { cout << "发送 "; a.print(); }
-	//clock_t end = clock();
-	//double endtime = (double)(end - start) / CLOCKS_PER_SEC;
-	//cout << "time:" << endtime << endl;		//s为单位
+
 }
 
 void simplerecv(message& a)
@@ -36,13 +32,6 @@ void simplerecv(message& a)
 }
 
 
-bool check(message a, message b)
-{
-	/*if (b.get_ack() == 1 && b.ackseq == a.msgseq)
-		return 1;
-	else return 0;*/
-	return 1;
-}
 
 
 bool stopwaitsend(message& a, message b)//a写入待发送消息，如果收到对方返回的ack则成功
@@ -93,17 +82,4 @@ bool stopwaitrecv(message& a, message b)//收到的消息写入a中
 	}
 	cout << "接收失败" << endl;
 	return 0;
-}
-
-void time()
-{
-	clock_t start, end;
-	start = clock();		//程序开始计时
-	int ans = 0;
-	for (int i = 1; i <= 1e8; i++)
-		ans++;
-	end = clock();		//程序结束用时
-	double endtime = (double)(end - start) / CLOCKS_PER_SEC;
-	cout << "Total time:" << endtime << endl;		//s为单位
-	cout << "Total time:" << endtime * 1000 << "ms" << endl;	//ms为单位
 }

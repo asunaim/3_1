@@ -15,7 +15,7 @@ message msgsend[SENDBUFFER];
 int buildconnectionCli();//握手
 int sendfile(char* name);//发送文件
 
-void readfile(char* name, char content[10000][1024], int& length, int& index);
+void readfile(char* name, char content[50000][1024], int& length, int& index);
 int byecli();//因为只是单向传输，写三次挥手即可
 
 
@@ -72,7 +72,7 @@ int sendfile(char* name)//发送文件
 }
 
 
-void readfile(char* name, char content[10000][1024], int& length, int& index)
+void readfile(char* name, char content[50000][1024], int& length, int& index)
 {
 	index = 0;
 	length = 0;
@@ -125,54 +125,57 @@ DWORD WINAPI recvhandler(LPVOID lparam)
 		{
 			//cout << "receive" << endl;
 			clockstart = clock();//重置计时器
-			if (a.ackseq == base)//收到正确的消息序号
+			if (a.ackseq >= base)//收到正确的消息序号
 			{
-				base++;
+				base=a.ackseq+1;
 				overtime = 0;
 				//cout << "现在是正常的" << endl;
 				//flag = 0;
 			}
-			else if (a.ackseq < base-1)//前面的ack丢包
-			{
-				//base = a.ackseq+1;//状态退回
-				//overtime = 1;
-				//cout << "前面的ack丢包" << endl;
-			}
-			else if(a.ackseq == base - 1)
-			{
-				overtime = 1;//重传所有已发送未确认的分组
-				cout << "需要重传" << endl;
-				base = a.ackseq+1;
-				//flag++
-			}
-			else
-			{
-				overtime = 1;
-				cout << "失序" << endl;
-			}
+			//else if (a.ackseq < base-1)//前面的ack丢包
+			//{
+			//	//base = a.ackseq+1;//状态退回
+			//	//overtime = 1;
+			//	//cout << "前面的ack丢包" << endl;
+			//	overtime = 0;
+			//}
+			//else if(a.ackseq == base - 1)
+			//{
+			//	//overtime = 1;//重传所有已发送未确认的分组
+			//	//cout << "需要重传" << endl;
+			//	//base = a.ackseq+1;
+			//	//flag++
+			//}
+			//else
+			//{
+			//	/*overtime = 1;
+			//	cout << "失序" << endl;*/
+			//	base = a.ackseq + 1;
+			//	overtime = 0;
+			//}
 		}
 		clockend = clock();
-		if ((clockend - clockstart) / CLOCKS_PER_SEC >= WAIT_TIME)
-		{
-			//超时，加锁
-			mutex mxt;
-			mxt.lock();
-			overtime = 1;
-			mxt.unlock();
-			cout << "超时" << endl;
-			//flag++;
-		}
-		//mxt.~mutex();
-		finalovertime = clock();
-		if ((clockend - clockstart) / CLOCKS_PER_SEC >= WAIT_TIME*SENT_TIMES)
-		{
-			mutex mxt;
-			mxt.lock();
-			overtime = 2;
-			mxt.unlock();
-			cout << "对方似乎断网了" << endl;
-			return 0;
-		}
+		//if ((clockend - clockstart) / CLOCKS_PER_SEC >= WAIT_TIME)
+		//{
+		//	//超时，加锁
+		//	mutex mxt;
+		//	mxt.lock();
+		//	overtime = 1;
+		//	mxt.unlock();
+		//	cout << "超时" << endl;
+		//	//flag++;
+		//}
+		////mxt.~mutex();
+		//finalovertime = clock();
+		//if ((clockend - clockstart) / CLOCKS_PER_SEC >= WAIT_TIME*SENT_TIMES)
+		//{
+		//	mutex mxt;
+		//	mxt.lock();
+		//	overtime = 2;
+		//	mxt.unlock();
+		//	cout << "对方似乎断网了" << endl;
+		//	return 0;
+		//}
 	}
 	cout << "exitpoint2" << endl;
 	return 1;
@@ -182,6 +185,8 @@ DWORD WINAPI recvhandler(LPVOID lparam)
 
 DWORD WINAPI sendhandler(LPVOID lparam)//发线程
 {
+	int flag = 0;
+	clock_t s = clock();
 	while (base < buffersize)
 	{
 		if (sendnextseq == base + N)
@@ -192,10 +197,12 @@ DWORD WINAPI sendhandler(LPVOID lparam)//发线程
 		if (!overtime)
 			for (; sendnextseq < base + N && sendnextseq < buffersize; sendnextseq++)
 			{
+				flag = 0;//正常发送
 				if (!overtime)
 				{
 					simplesend(msgsend[sendnextseq]);
-					//Sleep(10);
+					s = clock();
+					//Sleep(20);
 				}
 				else { 
 					break; 
@@ -216,25 +223,30 @@ DWORD WINAPI sendhandler(LPVOID lparam)//发线程
 			}
 		if (overtime==1)//这一部分需要加锁，运行此部分
 		{
-			Sleep(30);//减少重传次数
+			if(flag) 
+				Sleep(50);//减少重传次数
 			for (int i = base; i < sendnextseq; i++)
 			{
 				//重新发送
-				if (!overtime)
-				{
-					simplesend(msgsend[i]); Sleep(10);
-				}
-				else
-				{
-					break;
-				}
+					simplesend(msgsend[i]); //Sleep(10);
+					s = clock();
+					flag++;
+					//Sleep(100);
 				
 				//cout << "xxxxxxxxxxx" << endl;
 			}
 			overtime = 0;
 		}
-		if (overtime == 2)
-			return 0;//断网啦别发了
+		//if (overtime == 2)
+			//return 0;//断网啦别发了
+		clock_t e = clock();
+		if ((e - s)/ CLOCKS_PER_SEC >= WAIT_TIME)//超时重发
+			overtime = 1;
+		if ((e - s) / CLOCKS_PER_SEC >= WAIT_TIME * SENT_TIMES||flag==SENT_TIMES)//超时重发
+		{
+			overtime = 2;
+			return 0;
+		}
 	}
 	cout << "exitpoint1" << endl;
 	return 0;

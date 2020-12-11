@@ -24,7 +24,7 @@ int overtime = 0;//超时标识，用于线程间通信
 #define SPORT 30000
 #define CPORT 6666
 #define BUF_SIZE 1024
-#define WAIT_TIME 2//1s
+#define WAIT_TIME 1//1s
 #define SENT_TIMES 8//最多八次重传
 #define FILE_PACKET_LENGTH 1024
 #define SENDBUFFER 10000
