@@ -3,7 +3,7 @@
 # define _CRT_SECURE_NO_WARNINGS
 # define _WINSOCK_DEPRECATED_NO_WARNINGS
 #pragma comment(lib,"ws2_32.lib")//链接ws2_32.lib库文件到此项目中
-using namespace std;
+
 #include <iostream>
 #include<stdlib.h>
 #include<stdio.h>
@@ -15,7 +15,7 @@ using namespace std;
 #include <fstream>
 
 #include <mutex>
-
+using namespace std;
 clock_t clockstart, clockend;
 int sendseq = 0;
 int recvseq = 0;
@@ -31,11 +31,11 @@ int overtime = 0;//超时标识，用于线程间通信
 //线程
 
 
-
+//cout.tie(0);
 int addr_len = sizeof(struct sockaddr_in);
 SOCKET sock;
 SOCKADDR_IN addrop, addr;//ip+端口号
-char content[10000][1024];
+char content[50000][1024];
 int base, sendnextseq, recvnextseq;
 int  N = 10;//窗口大小
 int buffersize = 0;//缓冲区大小
@@ -103,6 +103,10 @@ struct filepacket//拷贝文件内容时需要的信息
 
 message::message() {
 	memset(this, 0, sizeof(message));//初始化全0
+	SendPort = CPORT;
+	RecvPort = SPORT;
+	SendIP = addr.sin_addr.s_addr;
+	RecvIP = addrop.sin_addr.s_addr;
 }
 
 void message::set_send_ip(char* s) {}
@@ -207,7 +211,7 @@ void message::setchecksum()
 {
 	int sum = 0;
 	u_char* temp = (u_char*)this;
-	for (int i = 0; i < 16; i++)
+	for (int i = 0; i < 20; i++)
 	{
 		sum += temp[2 * i] << 8 + temp[2 * i + 1];
 		while (sum >= 0x10000)
@@ -225,7 +229,7 @@ bool message::checkchecksum()
 {
 	int sum = 0;
 	u_char* temp = (u_char*)this;
-	for (int i = 0; i < 16; i++)
+	for (int i = 0; i < 20; i++)
 	{
 		sum += temp[2 * i] << 8 + temp[2 * i + 1];
 		while (sum >= 0x10000)

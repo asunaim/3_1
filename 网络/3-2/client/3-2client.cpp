@@ -31,12 +31,16 @@ int main()
 	}
 
 	//初始化地址
-	addrop.sin_addr.s_addr = inet_addr("127.0.0.1");
+	addrop.sin_addr.s_addr = inet_addr("192.168.89.1");
 	addrop.sin_family = AF_INET;
 	addrop.sin_port = htons(CPORT);
 
 
-	addr.sin_addr.s_addr = inet_addr("192.168.89.1");
+	/*addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+	addr.sin_family = AF_INET;
+	addr.sin_port = htons(SPORT);*/
+
+	addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(SPORT);
 
@@ -47,6 +51,25 @@ int main()
 	{
 		cout << "bind error" << endl; return -1;
 	}*/
+
+	cout << "client3-2" << endl;
+	cout << "是否使用默认IP？是1，否2";
+	int i;
+	cin >> i;
+	if (i == 2)
+	{
+		char s[20] = {};
+		char c[20] = {};
+		cout << "请输入服务器IP: ";
+		cin >> s;
+		cout << "请输入客户端IP: ";
+		cin >> c;
+		addrop.sin_addr.s_addr = inet_addr(c);
+		addr.sin_addr.s_addr = inet_addr(s);
+	}
+
+
+
 
 
 	/*message a;
@@ -61,8 +84,8 @@ int main()
 	clock_t end = clock();
 	double endtime = (double)(end - start) / CLOCKS_PER_SEC;
 	cout << endtime << endl;*/
-	cout << "client3-2" << endl;
-	int i = 0;
+
+	//int i = 0;
 	while (1)
 	{
 		int op;
@@ -100,6 +123,7 @@ int main()
 		buffersize = 0;
 		base = 0;
 		sendnextseq = 0;
+		memset(msgsend, 0, sizeof(msgsend));
 	}
 
 	closesocket(sock);

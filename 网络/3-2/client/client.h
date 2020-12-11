@@ -105,10 +105,6 @@ int byecli()//四次挥手
 	a.msgseq = buffersize;
 	message::copy(msgsend[buffersize++], a);
 	return 1;
-	////第一次挥手，发送FIN
-	//message a, b, c;
-	//a.set_fin();//第一次
-	//simplesend(a);
 }
 
 
@@ -133,31 +129,48 @@ DWORD WINAPI recvhandler(LPVOID lparam)
 			{
 				base++;
 				overtime = 0;
+				//cout << "现在是正常的" << endl;
 				//flag = 0;
 			}
-			else if (a.ackseq < base)//前面的ack丢包
+			else if (a.ackseq < base-1)//前面的ack丢包
 			{
-				base = a.ackseq;//状态退回
-				overtime = 1;
+				//base = a.ackseq+1;//状态退回
+				//overtime = 1;
+				//cout << "前面的ack丢包" << endl;
 			}
-			else 
+			else if(a.ackseq == base - 1)
 			{
 				overtime = 1;//重传所有已发送未确认的分组
+				cout << "需要重传" << endl;
+				base = a.ackseq+1;
 				//flag++
+			}
+			else
+			{
+				overtime = 1;
+				cout << "失序" << endl;
 			}
 		}
 		clockend = clock();
 		if ((clockend - clockstart) / CLOCKS_PER_SEC >= WAIT_TIME)
 		{
 			//超时，加锁
+			mutex mxt;
+			mxt.lock();
 			overtime = 1;
+			mxt.unlock();
+			cout << "超时" << endl;
 			//flag++;
 		}
 		//mxt.~mutex();
 		finalovertime = clock();
 		if ((clockend - clockstart) / CLOCKS_PER_SEC >= WAIT_TIME*SENT_TIMES)
 		{
+			mutex mxt;
+			mxt.lock();
 			overtime = 2;
+			mxt.unlock();
+			cout << "对方似乎断网了" << endl;
 			return 0;
 		}
 	}
@@ -172,14 +185,21 @@ DWORD WINAPI sendhandler(LPVOID lparam)//发线程
 	while (base < buffersize)
 	{
 		if (sendnextseq == base + N)
-			Sleep(2);
+			Sleep(20);
 		//cout << "发送base " << base << endl;
 		int i = (int)(LPVOID)lparam;
 		//cout << "发送" << i << endl;
 		if (!overtime)
 			for (; sendnextseq < base + N && sendnextseq < buffersize; sendnextseq++)
 			{
-				simplesend(msgsend[sendnextseq]);
+				if (!overtime)
+				{
+					simplesend(msgsend[sendnextseq]);
+					//Sleep(10);
+				}
+				else { 
+					break; 
+				}
 				//clock_t start = clock();
 				//if (!overtime)//当前不用重传，可以正常发送
 				//{
@@ -196,12 +216,22 @@ DWORD WINAPI sendhandler(LPVOID lparam)//发线程
 			}
 		if (overtime==1)//这一部分需要加锁，运行此部分
 		{
+			Sleep(30);//减少重传次数
 			for (int i = base; i < sendnextseq; i++)
 			{
 				//重新发送
-				simplesend(msgsend[i]);
+				if (!overtime)
+				{
+					simplesend(msgsend[i]); Sleep(10);
+				}
+				else
+				{
+					break;
+				}
+				
 				//cout << "xxxxxxxxxxx" << endl;
 			}
+			overtime = 0;
 		}
 		if (overtime == 2)
 			return 0;//断网啦别发了
