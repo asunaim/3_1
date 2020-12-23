@@ -16,46 +16,7 @@ unsigned int LINEAR_A = 16807;
 
 int change(char a);
 
-class bigint
-{
-public:
-	unsigned int num[64];
-	//int deg;//多少个32位-1
-	bigint() ;
-	//bigint(int x);
-	void in(string);//16进制输入
-	void copy(bigint a);//深拷贝
-	void writebit(int x, int y);//向二进制的第x次项写入y
-	int getbit(int x);//取二进制的第x次项
-	void div(unsigned int b,bigint &q,bigint &r);//num%b==r
-	unsigned long long  getint(unsigned int x, unsigned int y);//取出大整数的第x次项到第y次项  0<=（y-x）<32
-	void writenum(bigint b,int j);//最低项第j次项写入数b
 
-	void add(unsigned int x);//+x
-	void sub(unsigned int x);//-x
-	void sub(unsigned int x,int j);
-	//void mul(unsigned int x, bigint temp);
-	void leftmove(bigint &temp);//左移一位
-	void leftmove4(bigint& temp);//左移四位
-	bool check0();//检查是否是0
-	bool equal(unsigned int x);//相等返回1，不等返回0
-	void print();
-	
-	static void getinv(bigint a, bigint b,bigint&c);//求逆元a>b b mod a
-
-
-	static void mul(bigint a, unsigned long long b, bigint& c);//c=a*b
-
-	static void add(bigint a, bigint b, bigint &c);//c=a+b
-	static void sub(bigint a, bigint b, bigint &c);//c=a-b
-	static void mul(bigint a, bigint b, bigint &c);//c=a*b
-	static void mod(bigint a, bigint b, bigint &c);//c=a%b
-	static void mod(bigint a, unsigned int  b, bigint& c);//c=a%b
-
-	static int compare(bigint a, bigint b);//a>b 1，a=b 0, a<b -1
-	static void pow_(bigint m, bigint e, bigint n, bigint& c);//c=m^e mod n
-
-};
 
 
 
@@ -64,7 +25,7 @@ public:
 class big//十六进制
 {
 public:
-	int num[256];
+	int num[512];
 	big();
 	void copy(big);
 	void print();
