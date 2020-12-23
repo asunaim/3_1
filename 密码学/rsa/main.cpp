@@ -3,37 +3,57 @@
 
 int main()
 {
-	//big a, b,n,c;
-	//a.set(67863);
-	//a.num[100] = 1;
-	//b.set(2341);
-	////n.num[2] = 3;
-	////c = mod(n, a);
-	//prime s(1);
-	//c = getinv(a, b);
-	//cout << "b1=";
-	//c.print();
-	//cout << "a=";
-	//a.print();
-	//cout << "b=";
-	//b.print();
-	//prime sp;
-	//int j;
+
+	cout << "1."<<endl<<"p=3,q=11,m=2,取e=3:" << endl;
+
+	big p1, q1,e1,m1;
+	p1.set(3); q1.set(5); e1.set(3); m1.set(2);
+	RSA_ a1(p1, q1, e1);
+	cout << "加密结果：";
+	RSAen_ ae1(a1, m1);
+	ae1.c.print();
+
+	cout << "解密结果: ";
+	RSAde_ ad1(a1, ae1.c);
+	ad1.m.print();
+
+	cout << "-------------------------------" << endl << "-------------------------------" << endl;
+
+	cout << "2." << endl << "素数生成："<<endl;
+
+
 	big e;
 	e.set(0x10001);
 
-	string a_ = "C8EA3821A75DF1DD0A1B28B975655DFB";
-	string b = "E2CD73254B1F1FF761F79DCFC4E92CFB";
 
-	prime p(a_), q(b);
+	prime p;
+	cout << "p= "; p.number.print();
+	prime q;
+	cout << "q= "; q.number.print();
 
-	RSA_ a(p.number, q.number,e);
+	cout << "-------------------------------" << endl << "-------------------------------" << endl;
+	cout << "3." << endl << "n长度为1024bit的RSA加密和解密："<<endl;
+	RSA_ a(p.number, q.number, e);
+	cout << "n= "; a.n.print();
+	cout << "phi= "; a.phi.print();
+	cout << "e= "; a.e.print();
+	cout << "d= "; a.d.print();
+	/*string a_ = "E83531E0C4579D193AEA24FB1AAC40AD3DFC0A8832E2981646024E5733628215073022CB3D2B53E66C9FDB6AEB4BE9BC4A64158C06B0969BA4CE6F2AE11414FB";
+	string b = "B3682FCA34677E225F2BCD52DCBDE0A37A03191F7BA160C0044F819B236E594D23EAC47BFDB22544AC63D2334D1E4C4B106CD49949FF832D0ED74D5F3E4C4B83";
+
+	prime p(a_), q(b);*/
+	//a.d.print();
 	big m;
 	m.set("Hi",0);
+
+
 	RSAen_ temp(a, m);
+	cout << "m= "; temp.m.print();
+	cout << "加密结果：";
 	temp.c.print();
 
 	RSAde_ temp_(a, temp.c);
+	cout << "解密结果： ";
 	temp_.m.print();
 }
 
@@ -48,7 +68,7 @@ prime::prime(string a,int x)
 
 void big::copy(big a)
 {
-	for (int i = 0; i < 256; i++)
+	for (int i = 0; i < 512; i++)
 		num[i] = a.num[i];
 }
 
@@ -60,7 +80,7 @@ big::big() {
 void big::print()
 {
 	int i;
-	for (i = 255; i > 0; i--)
+	for (i = 511; i > 0; i--)
 		if (num[i])
 			break;
 	cout << "0x";
@@ -71,17 +91,17 @@ void big::print()
 		if (i % 4 == 0)
 			cout << "";
 	}
-	cout << endl;
+	cout << endl<<endl;
 }
 
 big pow(big a, big b, big n)//a^b mod n
 {
-	big buffer[256];
+	big buffer[512];
 	//buffer[0].num[0]=1;
 	buffer[0].copy(a);
 
 	int x;
-	for (x = 255; x > 0; x--)
+	for (x = 511; x > 0; x--)
 		if (b.num[x])
 			break;
 	for (int i = 1; i <= x; i++)
@@ -91,15 +111,18 @@ big pow(big a, big b, big n)//a^b mod n
 		for (int j = 1; j < 5; j++)
 		{
 			big temp = mul(tempbuf[j - 1], tempbuf[j - 1]);
+			//temp.print();
 			tempbuf[j] = mod(temp, n);
+			//tempbuf[j].print();
 		}
 		buffer[i].copy(tempbuf[4]);
+		//buffer[i].print();
 	}
 
 	big product;
 	product.num[0] = 1;
 
-	for (int i = 255; i >= 0; i--)
+	for (int i = 511; i >= 0; i--)
 	{
 		big temp;
 		for(int j=0;j<b.num[i];j++)
@@ -121,11 +144,11 @@ big pow(big a, big b, big n)//a^b mod n
 big add(big a, big b)
 {
 	big c;
-	for (int i = 0; i < 256; i++)
+	for (int i = 0; i < 512; i++)
 	{
 		c.num[i] = a.num[i] + b.num[i];
 	}
-	for (int i = 0; i < 255; i++)
+	for (int i = 0; i < 511; i++)
 	{
 		//int t = c.num[i] % 16;
 		c.num[i + 1] += c.num[i]/16;
@@ -136,11 +159,11 @@ big add(big a, big b)
 big sub(big a, big b)
 {
 	big c;
-	for (int i = 0; i < 256; i++)
+	for (int i = 0; i < 512; i++)
 	{
 		c.num[i] = a.num[i] - b.num[i];
 	}
-	for (int i = 0; i < 255; i++)
+	for (int i = 0; i < 511; i++)
 	{
 		//int t = c.num[i] % 16;
 		if (c.num[i] < 0)
@@ -155,11 +178,11 @@ big sub(big a, big b,int d)
 {
 	big c;
 	c.copy(a);
-	for (int i = d; i < 256; i++)
+	for (int i = d; i < 512; i++)
 	{
 		c.num[i] -= b.num[i-d];
 	}
-	for (int i = 0; i < 255; i++)
+	for (int i = 0; i < 511; i++)
 	{
 		//int t = c.num[i] % 16;
 		if (c.num[i] < 0)
@@ -174,14 +197,14 @@ big sub(big a, big b,int d)
 big mul(big a, big b)
 {
 	big c;
-	for (int i = 0; i < 128; i++)
+	for (int i = 0; i < 256; i++)
 	{
-		for (int j = 0; j < 128; j++)
+		for (int j = 0; j < 256; j++)
 		{
 			c.num[i + j] += a.num[i] * b.num[j];
 		}
 	}
-	for (int i = 0; i < 254; i++)
+	for (int i = 0; i < 510; i++)
 	{
 		//int t = c.num[i] % 16;
 		c.num[i + 1] += c.num[i] / 16;
@@ -205,10 +228,10 @@ big div(big a, big b, big& c)
 	}
 
 	int x, y;
-	for (x = 255; x >= 0; x--)
+	for (x = 511; x >= 0; x--)
 		if (a.num[x])
 			break;
-	for (y = 255; y >= 0; y--)
+	for (y = 511; y >= 0; y--)
 		if (b.num[y])
 			break;
 	int d = x - y;
@@ -271,10 +294,10 @@ big mod(big a, big b)//a>b
 	}
 	
 	int x, y;
-	for (x = 255; x >= 0; x--)
+	for (x = 511; x >= 0; x--)
 		if (a.num[x])
 			break;
-	for (y = 255; y >= 0; y--)
+	for (y = 511; y >= 0; y--)
 		if (b.num[y])
 			break;
 	int d = x - y;
@@ -313,7 +336,7 @@ big mod(big a, big b)//a>b
 
 int compare(big a, big b)
 {
-	for (int i = 255; i >= 0; i--)
+	for (int i = 511; i >= 0; i--)
 	{
 		if (a.num[i] > b.num[i])return 1;
 		if (a.num[i] < b.num[i])return -1;
@@ -323,7 +346,7 @@ int compare(big a, big b)
 }
 int compare(big a, big b,int d)
 {
-	for (int i = 255; i >= d; i--)
+	for (int i = 511; i >= d; i--)
 	{
 		if (a.num[i] > b.num[i-d])return 1;
 		if (a.num[i] < b.num[i-d])return -1;
@@ -343,7 +366,7 @@ big getinv(big a, big b) //a mod b
 	int i;
 	big v1;
 	v1.set(1);
-	for(i=2;i<100;i++)
+	for(i=2;i<500;i++)
 	{
 		q[i - 1] = div(r[i - 2], r[i - 1], r[i]);
 		big temp = mul(q[i - 1], t[i - 1]);
@@ -531,7 +554,7 @@ void prime::millerrabin()//检查是否是素数,512位！！！
 				d.set(1);
 				for (int i = high * 4 + 3; i >= 0; i--)
 				{
-					cout << i << endl;
+					//cout << i << endl;
 					big x;
 					x.copy(d);
 					d = mul(d, d);
@@ -555,7 +578,7 @@ void prime::millerrabin()//检查是否是素数,512位！！！
 				if (compare(d, v1))
 				{
 					flag = 0;
-					number.print();
+					//number.print();
 				}
 				if (!flag)break;
 			}
@@ -567,7 +590,7 @@ void prime::millerrabin()//检查是否是素数,512位！！！
 			}
 		}
 	}
-	cout << "素数: "; number.print();
+	//cout << "素数: "; number.print();
 }
 
 
