@@ -70,6 +70,8 @@ public:
 	void print();
 	void set(unsigned int a);
 	void set(int a);
+	void set(string a);
+	void set(string a, int x);
 	void set(unsigned long long a);
 	int getbit(int i);//第2^i位
 };
@@ -90,7 +92,8 @@ class prime {
 public:
 	big number;
 	prime();
-	prime(int x);
+	prime(string a);
+	prime(string a,int x);
 	void getarbitrary();//生成512bit随机数，奇数
 	void check2000();//检查是否能被2000以内的素数整除,若不能则加2，直至可以
 	void millerrabin();//检查是否是素数
@@ -106,7 +109,7 @@ public:
 	big d, e;
 	//big c, m;//密文和明文
 
-	RSA_(big p, big q);
+	RSA_(big p, big q,big e);
 
 };
 
@@ -170,49 +173,3 @@ public:
 //
 //				print(flag)
 
-class prime1
-{
-public:
-	bigint number;//生成512位随机数
-	unsigned int smallprime[303];
-	prime1();
-	void getsmallprime();
-	void getarbitrary();//生成512bit随机数，奇数
-	void check2000();//检查是否能被2000以内的素数整除,若不能则加2，直至可以
-	void millerrabin();//检查是否是素数
-};
-
-class RSA//加密
-{
-public:
-	bigint n, phi;
-	bigint q;
-	bigint p;
-	bigint d, e;
-	//bigint c, m;//密文和明文
-
-	RSA(bigint p, bigint q);
-
-};
-
-
-
-
-
-
-class RSAen//加密
-{
-public:
-	bigint n,e;
-	bigint c, m;//密文和明文
-	RSAen(bigint n,bigint e,bigint m);
-
-};
-
-class RSAde//加密
-{
-public:
-	bigint n, d;
-	bigint c, m;//密文和明文
-	RSAde(bigint n, bigint d,bigint c);
-};
