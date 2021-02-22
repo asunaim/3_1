@@ -2,13 +2,13 @@
 #include "pcap.h"
 
 
-#pragma pack(1)//ä»¥1byteæ–¹å¼å¯¹é½
-typedef struct FrameHeader_t {//å¸§é¦–éƒ¨
-	BYTE DesMAC[6];//ç›®çš„åœ°å€
-	BYTE SrcMAC[6];//æºåœ°å€
-	WORD FrameType;//å¸§ç±»å‹
+#pragma pack(1)//ÒÔ1byte·½Ê½¶ÔÆë
+typedef struct FrameHeader_t {//Ö¡Ê×²¿
+	BYTE DesMAC[6];//Ä¿µÄµØÖ·
+	BYTE SrcMAC[6];//Ô´µØÖ·
+	WORD FrameType;//Ö¡ÀàĞÍ
 }FrameHeader_t;
-typedef struct ARPFrame_t {//IPé¦–éƒ¨
+typedef struct ARPFrame_t {//IPÊ×²¿
 	FrameHeader_t FrameHeader;
 	WORD HardwareType;
 	WORD ProtocolType;
@@ -22,7 +22,7 @@ typedef struct ARPFrame_t {//IPé¦–éƒ¨
 }ARPFrame_t;
 
 
-typedef struct IPHeader_t {//IPé¦–éƒ¨
+typedef struct IPHeader_t {//IPÊ×²¿
 	BYTE Ver_HLen;
 	BYTE TOS;
 	WORD TotalLen;
@@ -34,35 +34,77 @@ typedef struct IPHeader_t {//IPé¦–éƒ¨
 	ULONG SrcIP;
 	ULONG DstIP;
 }IPHeader_t;
-typedef struct Data_t {//åŒ…å«å¸§é¦–éƒ¨å’ŒIPé¦–éƒ¨çš„æ•°æ®åŒ…
+typedef struct Data_t {//°üº¬Ö¡Ê×²¿ºÍIPÊ×²¿µÄÊı¾İ°ü
 	FrameHeader_t FrameHeader;
 	IPHeader_t IPHeader;
 }Data_t;
 
 
-typedef struct ICMP {//åŒ…å«å¸§é¦–éƒ¨å’ŒIPé¦–éƒ¨çš„æ•°æ®åŒ…
+//typedef struct timeex
+//{
+//	BYTE type;
+//	BYTE code;
+//	WORD checksum;
+//	BYTE version;
+//	BYTE length;
+//	BYTE DSF;
+//	WORD totallength;
+//	WORD id;
+//	BYTE flag;
+//	BYTE fragment;
+//	BYTE ttl;
+//	BYTE protocol;
+//	WORD hchecksum;
+//	ULONG srcip;
+//	ULONG dstip;
+//	BYTE type2;
+//	BYTE code2;
+//	WORD checksum;
+//	BYTE IDBE;
+//	BYTE IDLE;
+//
+//	timeex()
+//	{
+//		memset(this,0,sizeof(timeex));
+//		type=11;
+//		version=4;length=5;
+//		totallength=92;
+//		id=4198;
+//		ttl=1;
+//		
+//	}
+//};
+
+
+
+typedef struct ICMP {//°üº¬Ö¡Ê×²¿ºÍIPÊ×²¿µÄÊı¾İ°ü
 	FrameHeader_t FrameHeader;
 	IPHeader_t IPHeader;
-	char buf[100];
+	char buf[0x80];
 }ICMP_t;
 
 
-#pragma pack()//æ¢å¤4byteså¯¹é½
 
 
 
 
 
-#pragma pack(1)//ä»¥1byteæ–¹å¼å¯¹é½
+#pragma pack()//»Ö¸´4bytes¶ÔÆë
+
+
+
+
+
+#pragma pack(1)//ÒÔ1byte·½Ê½¶ÔÆë
 class routeitem
 {
 public:
 	DWORD mask;
-	DWORD net;//ç›®çš„ç½‘ç»œ
-	DWORD nextip;//ä¸‹ä¸€è·³
-	BYTE nextMAC[6];//ä¸‹ä¸€è·³çš„MACåœ°å€
-	int index;//ç¬¬å‡ æ¡
-	int type;//0ä¸ºç›´æ¥è¿æ¥ï¼Œ1ä¸ºç”¨æˆ·æ·»åŠ ï¼Œ1ä¸å¯åˆ é™¤
+	DWORD net;//Ä¿µÄÍøÂç
+	DWORD nextip;//ÏÂÒ»Ìø
+	BYTE nextMAC[6];//ÏÂÒ»ÌøµÄMACµØÖ·
+	int index;//µÚ¼¸Ìõ
+	int type;//0ÎªÖ±½ÓÁ¬½Ó£¬1ÎªÓÃ»§Ìí¼Ó£¬1²»¿ÉÉ¾³ı
 	routeitem* nextitem;
 	routeitem()
 	{
@@ -72,28 +114,28 @@ public:
 
 };
 
-#pragma pack()//æ¢å¤4byteså¯¹é½
+#pragma pack()//»Ö¸´4bytes¶ÔÆë
 
-#pragma pack(1)//æ¢å¤4byteså¯¹é½
+#pragma pack(1)//»Ö¸´4bytes¶ÔÆë
 class routetable
 {
 public:
-	routeitem* head, * tail;//æ”¯æŒæœ€å¤šæ·»åŠ 50è½¬å‘è¡¨
-	int num;//æ¡æ•°
-	routetable();//åˆå§‹åŒ–ï¼Œæ·»åŠ ç›´æ¥è¿æ¥çš„ç½‘ç»œ
+	routeitem* head, * tail;//Ö§³Ö×î¶àÌí¼Ó50×ª·¢±í
+	int num;//ÌõÊı
+	routetable();//³õÊ¼»¯£¬Ìí¼ÓÖ±½ÓÁ¬½ÓµÄÍøÂç
 
-	//è·¯ç”±è¡¨çš„æ·»åŠ ï¼Œç›´æ¥æŠ•é€’åœ¨æœ€å‰ï¼Œå‰ç¼€é•¿çš„åœ¨å‰é¢
+	//Â·ÓÉ±íµÄÌí¼Ó£¬Ö±½ÓÍ¶µİÔÚ×îÇ°£¬Ç°×º³¤µÄÔÚÇ°Ãæ
 	void add(routeitem* a);
 
-	//åˆ é™¤ï¼Œtype=0ä¸èƒ½åˆ é™¤
+	//É¾³ı£¬type=0²»ÄÜÉ¾³ı
 	void remove(int index);
-	//è·¯ç”±è¡¨çš„æ‰“å° mask net next type
+	//Â·ÓÉ±íµÄ´òÓ¡ mask net next type
 	void print();
-	//æŸ¥æ‰¾ï¼Œæœ€é•¿å‰ç¼€,è¿”å›ä¸‹ä¸€è·³çš„ip
+	//²éÕÒ£¬×î³¤Ç°×º,·µ»ØÏÂÒ»ÌøµÄip
 	DWORD lookup(DWORD ip);
 
 };
-#pragma pack()//æ¢å¤4byteså¯¹é½
+#pragma pack()//»Ö¸´4bytes¶ÔÆë
 
 
 
@@ -111,29 +153,49 @@ public:
 	DWORD sip, dip;
 	BYTE smac[6], dmac[6];
 };
-//æ—¥å¿—ç±»
+
+
+class arptable
+{
+public:
+	DWORD ip;
+	BYTE mac[6];
+	static int num;
+	static void insert(DWORD ip,BYTE mac[6]);
+	static int lookup(DWORD ip, BYTE mac[6]);
+}atable[50];
+
+
+
+
+//ÈÕÖ¾Àà
 class log
 {
 public:
-	int index;//ç´¢å¼•
-	char type[5];//arpå’Œip
-	//å…·ä½“å†…å®¹
+	int index;//Ë÷Òı
+	char type[5];//arpºÍip
+	//¾ßÌåÄÚÈİ
 	ipitem ip; arpitem arp;
 
+	log();
+	~log();
 
-	static int num;//æ•°é‡
-	static log diary[50];//æ—¥å¿—
-	//å†™å…¥æ—¥å¿—
-	static void write2log_ip(Data_t*);//ipç±»å‹
-	static void write2log_arp(ARPFrame_t*);//arpç±»å‹
-	static void print();//æ‰“å°æ—¥å¿—
+	static int num;//ÊıÁ¿
+	static log diary[50];//ÈÕÖ¾
+	static FILE* fp;
+	//Ğ´ÈëÈÕÖ¾
+	static void write2log_ip(Data_t*);//ipÀàĞÍ
+	static void write2log_arp(ARPFrame_t*);//arpÀàĞÍ
+	static void write2log_ip(const char* a,Data_t*);//ipÀàĞÍ
+	
+	static void print();//´òÓ¡ÈÕÖ¾
 };
 
 
 pcap_if_t* alldevs;
 pcap_if_t* d;
-pcap_t* ahandle;//opençš„ç½‘å¡
-pcap_addr* a;//ç½‘å¡å¯¹åº”çš„åœ°å€
+pcap_t* ahandle;//openµÄÍø¿¨
+pcap_addr* a;//Íø¿¨¶ÔÓ¦µÄµØÖ·
 char errbuf[PCAP_ERRBUF_SIZE];
 char* pcap_src_if_string;
 
@@ -143,52 +205,51 @@ char ip[10][20];
 char mask[10][20];
 BYTE selfmac[6];
 char name[100];
-//å¤šçº¿ç¨‹
+//¶àÏß³Ì
 //HANDLE hThread;
 //DWORD dwThreadId;
 
 BYTE broadcast[6] = { 0xff,0xff,0xff,0xff,0xff,0xff };
 
-int compare(BYTE a[], BYTE b[]);//æ¯”è¾ƒä¸¤ä¸ªæ•°ç»„æ˜¯å¦ç›¸åŒ
+int compare(BYTE a[], BYTE b[]);//±È½ÏÁ½¸öÊı×éÊÇ·ñÏàÍ¬
 
 
 
 
-//è·å–è‡ªå·±çš„IP
-void find_alldevs();	//è·å–æœ¬æœºçš„è®¾å¤‡åˆ—è¡¨ï¼Œå°†ä¸¤ä¸ªipå­˜å…¥ipæ•°ç»„ä¸­,è·å–IPã€maskï¼Œè®¡ç®—æ‰€åœ¨ç½‘æ®µ
-DWORD getnet(DWORD ip, DWORD mask);//æ ¹æ®ipå’Œæ©ç è®¡ç®—æ‰€åœ¨ç½‘ç»œ
-//æ‰“å¼€ç½‘ç»œæ¥å£
+//»ñÈ¡×Ô¼ºµÄIP
+void find_alldevs();	//»ñÈ¡±¾»úµÄÉè±¸ÁĞ±í£¬½«Á½¸öip´æÈëipÊı×éÖĞ,»ñÈ¡IP¡¢mask£¬¼ÆËãËùÔÚÍø¶Î
+DWORD getnet(DWORD ip, DWORD mask);//¸ù¾İipºÍÑÚÂë¼ÆËãËùÔÚÍøÂç
+//´ò¿ªÍøÂç½Ó¿Ú
 pcap_t* open(char* name);
-//è·å–è‡ªå·±çš„MAC
+//»ñÈ¡×Ô¼ºµÄMAC
 void getselfmac(DWORD ip);
-//è·å–ç›´æ¥è¿æ¥çš„ç½‘å¡mac
+//»ñÈ¡Ö±½ÓÁ¬½ÓµÄÍø¿¨mac
 void getothermac(DWORD mask_, DWORD ip, BYTE mac[]);
-//æ˜¾ç¤ºåŸºæœ¬ä¿¡æ¯ æœ¬æœºipï¼Œmac
+//ÏÔÊ¾»ù±¾ĞÅÏ¢ ±¾»úip£¬mac
 void printbasicinfo();
 
-//å‘é€æ•°æ®æŠ¥,å†™å…¥æ—¥å¿—
-int ipsend(u_char*);
-//æ¥æ”¶æ•°æ®æŠ¥ï¼Œå†™å…¥æ—¥å¿—
+
+//½ÓÊÕÊı¾İ±¨£¬Ğ´ÈëÈÕÖ¾
 int iprecv(pcap_pkthdr* pkt_header, const u_char* pkt_data);
 
 
-//æ•°æ®æŠ¥è½¬å‘,ä¿®æ”¹æºmacå’Œç›®çš„mac
-void resend(const u_char* pkt_data, BYTE dmac[]);
+//Êı¾İ±¨×ª·¢,ĞŞ¸ÄÔ´macºÍÄ¿µÄmac
+void resend(ICMP_t, BYTE dmac[]);
 
-//æ‰“å°mac
+//´òÓ¡mac
 void getmac(BYTE MAC[]);
 
 
 
-//å‡½
-//pcap_t* open(char* name);	//æ‰“å¼€ç½‘ç»œæ¥å£
-//void get_info(char* name);//è·å–å¹¶æ‰“å°æ‰€éœ€ä¿¡æ¯
+//º¯
+//pcap_t* open(char* name);	//´ò¿ªÍøÂç½Ó¿Ú
+//void get_info(char* name);//»ñÈ¡²¢´òÓ¡ËùĞèĞÅÏ¢
 
-//çº¿ç¨‹å‡½æ•°
+//Ïß³Ìº¯Êı
 DWORD WINAPI handlerRequest(LPVOID lparam);
 
 void ipprint(DWORD ip);
 
 
-bool checkchecksum(Data_t* );
+bool checkchecksum(Data_t*);
 void setchecksum(Data_t*);

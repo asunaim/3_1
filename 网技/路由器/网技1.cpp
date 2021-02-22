@@ -1,4 +1,4 @@
-#define _CRT_SECURE_NO_WARNINGS
+﻿#define _CRT_SECURE_NO_WARNINGS
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 
 #include "标头.h"
@@ -28,14 +28,6 @@ int main()
 	//获取本机ip
 	find_alldevs();
 
-
-
-	//ahandle = open(net[index]->name);
-
-
-	/*strcpy(ip[0],"192.168.89.1");
-	strcpy(ip[1],"192.168.43.135");
-	strcpy(mask[0], "255.255.255.0");*/
 	for (int i = 0; i < 2; i++)
 	{
 		printf("%s\t", ip[i]);
@@ -52,9 +44,17 @@ int main()
 	routetable rtable;
 	hThread = CreateThread(NULL, NULL, handlerRequest, LPVOID(&rtable), 0, &dwThreadId);
 
+
+	routeitem a;
+	//a.mask = inet_addr("255.255.255.0");
+	//a.nextip = inet_addr("15.1.2.2");
+	//a.net = inet_addr("15.1.3.0");
+
+	//rtable.add(&a);
+
 	while (1)
 	{
-		printf("1添加路由表项，2删除路由表项，3打印路由表，4开始路由转发，5打印日志: ");
+		printf("1添加路由表项，2删除路由表项，3打印路由表: ");
 		scanf("%d", &op);
 		if (op == 1)
 		{
@@ -82,47 +82,6 @@ int main()
 		else if (op == 3)
 		{
 			rtable.print();
-		}
-		else if (op == 4)
-		{
-			while (1)
-			{
-				pcap_pkthdr* pkt_header; const u_char* pkt_data;
-				while (1)
-				{
-					int rtn = pcap_next_ex(ahandle, &pkt_header, &pkt_data);
-					if (rtn)break;
-				}
-				FrameHeader_t* header = (FrameHeader_t*)pkt_data;
-				if (compare(header->DesMAC, selfmac))//目的mac是自己的mac
-				{
-					if (header->FrameType == 0x806)//收到arp内容
-					{
-
-					}
-					else if (header->FrameType == 0x800)
-					{
-						Data_t* data = (Data_t*)pkt_data;
-						if (data->IPHeader.DstIP != inet_addr(ip[0]) && data->IPHeader.DstIP != inet_addr(ip[1]))
-						{
-							BYTE mac[6];
-							DWORD ip1 = data->IPHeader.DstIP;
-							DWORD ip = rtable.lookup(ip1);
-							//getothermac(ip, mac);
-							resend(pkt_data, mac);////////////////////////////
-						}
-						else//发给自己的
-						{
-
-						}
-
-					}
-				}
-			}
-		}
-		else if (op == 5)
-		{
-			ltable.print();
 		}
 		else {
 			printf("无效操作，请重新选择\n");
@@ -336,6 +295,7 @@ void getothermac(DWORD mask_, DWORD ip_, BYTE mac[])//获取ip对应的mac
 		if ((mask_ & ip_) == (inet_addr(ip[i]) & mask_))
 			ARPFrame.SendIP = inet_addr(ip[i]);
 	}
+	
 	//ipprint(ARPFrame.SendIP);
 	//将ARPFrame.RecvHa设置为0
 	for (int i = 0; i < 6; i++)
@@ -375,8 +335,104 @@ void getothermac(DWORD mask_, DWORD ip_, BYTE mac[])//获取ip对应的mac
 					{//输出目的MAC地址
 						if (!compare(IPPacket->FrameHeader.SrcMAC, ARPFrame.FrameHeader.SrcMAC) && compare(IPPacket->FrameHeader.DesMAC, ARPFrame.FrameHeader.SrcMAC) && IPPacket->SendIP == ip_)//&&ip==IPPacket->SendIP
 						{
-							ipprint(ip_);
-							ipprint(IPPacket->SendIP);///////////////////
+							//ipprint(ip_);
+							//ipprint(IPPacket->SendIP);///////////////////
+
+							ltable.write2log_arp(IPPacket);
+							//输出源MAC地址
+							for (int i = 0; i < 6; i++)
+							{
+								mac[i] = IPPacket->FrameHeader.SrcMAC[i];
+								//if (flag == 0)
+								//printf("%02x.", IPPacket->FrameHeader.SrcMAC[i]);
+								//ARPFrame.FrameHeader.SrcMAC[i] = IPPacket->FrameHeader.SrcMAC[i];
+								//ARPFrame.SendHa[i] = IPPacket->FrameHeader.SrcMAC[i];
+							}
+							//getmac(mac);
+							break;
+
+						}
+
+					}
+				}
+			}
+		}
+	}
+}
+
+
+
+
+void getothermac(DWORD ip_, BYTE mac[])//获取ip对应的mac
+{
+	memset(mac, 0, sizeof(mac));
+	ARPFrame_t ARPFrame;
+	//将APRFrame.FrameHeader.DesMAC设置为广播地址
+	for (int i = 0; i < 6; i++)
+		ARPFrame.FrameHeader.DesMAC[i] = 0xff;
+	//将APRFrame.FrameHeader.SrcMAC设置为本机网卡的MAC地址
+	for (int i = 0; i < 6; i++)
+	{
+		ARPFrame.FrameHeader.SrcMAC[i] = selfmac[i];
+		ARPFrame.SendHa[i] = selfmac[i];
+
+	}
+
+
+	ARPFrame.FrameHeader.FrameType = htons(0x806);//帧类型为ARP
+	ARPFrame.HardwareType = htons(0x0001);//硬件类型为以太网
+	ARPFrame.ProtocolType = htons(0x0800);//协议类型为IP
+	ARPFrame.HLen = 6;//硬件地址长度为6
+	ARPFrame.PLen = 4;//协议地址长为4
+	ARPFrame.Operation = htons(0x0001);//操作为ARP请求
+
+	//将ARPFrame.SendHa设置为本机网卡的MAC地址
+	/*for (int i = 0; i < 6; i++)
+		ARPFrame.SendHa[i] = 0x66;*/
+
+		//将ARPFrame.SendIP设置为本机网卡上绑定的IP地址
+	ARPFrame.SendIP = inet_addr(ip[0]);
+	//ipprint(ARPFrame.SendIP);
+	//将ARPFrame.RecvHa设置为0
+	for (int i = 0; i < 6; i++)
+		ARPFrame.RecvHa[i] = 0;
+	//将ARPFrame.RecvIP设置为请求的IP地址
+	//ARPFrame.RecvIP = inet_addr(ip[index]);
+
+
+	ARPFrame.RecvIP = ip_;
+
+	u_char* h = (u_char*)&ARPFrame;
+	int len = sizeof(ARPFrame_t);
+
+
+	if (ahandle == nullptr) printf("网卡接口打开错误\n");
+	else
+	{
+		if (pcap_sendpacket(ahandle, (u_char*)&ARPFrame, sizeof(ARPFrame_t)) != 0)
+		{
+			//发送错误处理
+			printf("senderror\n");
+		}
+		else
+		{
+			//发送成功
+			while (1)
+			{
+				//printf("send\n");
+				pcap_pkthdr* pkt_header;
+				const u_char* pkt_data;
+				int rtn = pcap_next_ex(ahandle, &pkt_header, &pkt_data);
+				//pcap_sendpacket(ahandle, (u_char*)&ARPFrame, sizeof(ARPFrame_t));
+				if (rtn == 1)
+				{
+					ARPFrame_t* IPPacket = (ARPFrame_t*)pkt_data;
+					if (ntohs(IPPacket->FrameHeader.FrameType) == 0x806)
+					{//输出目的MAC地址
+						if (!compare(IPPacket->FrameHeader.SrcMAC, ARPFrame.FrameHeader.SrcMAC) && compare(IPPacket->FrameHeader.DesMAC, ARPFrame.FrameHeader.SrcMAC) && IPPacket->SendIP == ip_)//&&ip==IPPacket->SendIP
+						{
+							//ipprint(ip_);
+							//ipprint(IPPacket->SendIP);///////////////////
 
 							ltable.write2log_arp(IPPacket);
 							//输出源MAC地址
@@ -426,11 +482,6 @@ void routetable::add(routeitem* a)
 	//其它，按照掩码由长至短找到合适的位置
 	else
 	{
-		/*	for (pointer = head->nextitem; pointer->mask == 0xffffffff || pointer->mask == 0; pointer = pointer->nextitem)
-			{
-				int t;
-			}*/
-
 		for (pointer = head->nextitem; pointer != tail && pointer->nextitem != tail; pointer = pointer->nextitem)//head有内容，tail没有
 		{
 			if (a->mask < pointer->mask && a->mask >= pointer->nextitem->mask || pointer->nextitem == tail)
@@ -485,7 +536,6 @@ void routetable::print()
 
 routetable::routetable()//初始化，添加直接连接的网络
 {
-	//getselfmac(inet_addr(ip[0]));
 	head = new routeitem;
 	tail = new routeitem;
 	head->nextitem = tail;
@@ -495,12 +545,7 @@ routetable::routetable()//初始化，添加直接连接的网络
 		routeitem* temp = new routeitem;
 		temp->net = (inet_addr(ip[i])) & (inet_addr(mask[i]));
 		temp->mask = inet_addr(mask[i]);
-		//temp->nextip=inet_addr(ip[i]);
 		temp->type = 0;
-		//BYTE mac[6]={};
-		//getothermac(temp->mask,temp->nextip, mac);
-		//getmac(mac);
-		//memcpy(temp->nextMAC,mac,6);
 		this->add(temp);
 	}
 }
@@ -537,58 +582,30 @@ int iprecv(pcap_pkthdr* pkt_header, const u_char* pkt_data)
 	return rtn;
 }
 
-int ipsend(u_char* pkt)//发送数据报
-{
-	/////////////////
-	int rtn = 1;
-	Data_t temp = *(Data_t*)pkt;
-	return rtn;
-}
+
 
 
 //数据报转发,修改源mac和目的mac
-void resend(const u_char* pkt_data, BYTE dmac[])
-{
-	Data_t* data = (Data_t*)pkt_data;
-	ltable.write2log_ip(data);
-	memcpy(data->FrameHeader.SrcMAC, data->FrameHeader.DesMAC, 6);
-	memcpy(data->FrameHeader.DesMAC, dmac, 6);
-	//int rtn = ipsend((u_char*)data);
-	ipprint(data->IPHeader.SrcIP);
-	ipprint(data->IPHeader.DstIP);
-	int rtn = pcap_sendpacket(ahandle, pkt_data, sizeof(Data_t));
-	if (rtn == 0) ltable.write2log_ip(data);
-}
-
-void resend(Data_t data, BYTE dmac[])
-{
-
-	ltable.write2log_ip(&data);
-	memcpy(data.FrameHeader.SrcMAC, data.FrameHeader.DesMAC, 6);
-	memcpy(data.FrameHeader.DesMAC, dmac, 6);
-	//int rtn = ipsend((u_char*)data);
-	ipprint(data.IPHeader.SrcIP);
-	ipprint(data.IPHeader.DstIP);
-	int rtn = pcap_sendpacket(ahandle, (const u_char*)&data, sizeof(data));
-	if (rtn == 0) ltable.write2log_ip(&data);
-}
-
 void resend(ICMP_t data, BYTE dmac[])
 {
-	Data_t temp;
-	temp.FrameHeader = data.FrameHeader;
-	temp.IPHeader = data.IPHeader;
-	ltable.write2log_ip(&temp);
-	memcpy(data.FrameHeader.SrcMAC, data.FrameHeader.DesMAC, 6);
-	memcpy(data.FrameHeader.DesMAC, dmac, 6);
-	data.IPHeader.TTL -= 1;
-	if (data.IPHeader.TTL <= 0)return;
-	setchecksum((Data_t*)&data);
-	//int rtn = ipsend((u_char*)data);
-	ipprint(data.IPHeader.SrcIP);
-	ipprint(data.IPHeader.DstIP);
-	int rtn = pcap_sendpacket(ahandle, (const u_char*)&data, sizeof(data));
-	if (rtn == 0) ltable.write2log_ip(&temp);
+	Data_t* temp=(Data_t*)&data;
+	//temp->FrameHeader = data.FrameHeader;
+	//temp->IPHeader = data.IPHeader;
+	//ltable.write2log_ip(&temp);
+	memcpy(temp->FrameHeader.SrcMAC, temp->FrameHeader.DesMAC, 6);
+	memcpy(temp->FrameHeader.DesMAC, dmac, 6);
+	temp->IPHeader.TTL -= 1;
+	if (temp->IPHeader.TTL < 0)return;
+	//WORD s0=temp.IPHeader.Checksum;
+	//int m=checkchecksum((Data_t*)&temp);
+	setchecksum(temp);
+	//WORD s1=temp.IPHeader.Checksum;
+	//int rtn = ipsend((u_char*)temp);
+	//ipprint(temp.IPHeader.SrcIP);
+	//ipprint(temp.IPHeader.DstIP);
+	int rtn = pcap_sendpacket(ahandle, (const u_char*)temp, 74);
+	if (rtn == 0)
+		ltable.write2log_ip("转发",temp);
 }
 
 
@@ -612,6 +629,19 @@ DWORD routetable::lookup(DWORD ip)
 
 int log::num = 0;
 log log::diary[50] = {};
+FILE* log:: fp = nullptr;
+log::log()
+{
+	fp = fopen("log.txt", "a+"); //第一个逗号前是文件位置。逗号之后是打开文件方式
+//fprintf(fp, "This is testing for fprintf...\n");
+}
+
+log::~log()
+{
+	fclose(fp);
+}
+
+
 void log::print()//打印日志
 {
 	int i;
@@ -661,6 +691,10 @@ void log::print()//打印日志
 }
 void log::write2log_ip(Data_t* pkt)//ip类型
 {
+
+
+
+
 	diary[num % 100].index = num++;
 	strcpy(diary[num % 100].type, "IP");
 	diary[num % 100].ip.sip = pkt->IPHeader.SrcIP;
@@ -671,13 +705,49 @@ void log::write2log_ip(Data_t* pkt)//ip类型
 	memcpy(diary[num % 100].ip.dmac, pkt->FrameHeader.DesMAC, 6);
 }
 
+void log::write2log_ip(const char* a, Data_t* pkt)//ip类型
+{
+	fprintf(fp, "IP  ");
+	fprintf(fp, a);
+	fprintf(fp, "  ");
+
+
+	in_addr addr;
+	addr.s_addr = pkt->IPHeader.SrcIP;
+	char* pchar = inet_ntoa(addr);
+
+	fprintf(fp, "源IP： ");
+	fprintf(fp,"%s  ", pchar);
+	fprintf(fp, "目的IP： ");
+	addr.s_addr = pkt->IPHeader.DstIP;
+	fprintf(fp, "%s  ", pchar);
+	fprintf(fp,"源MAC： ");
+	for (int i = 0; i < 5; i++)
+		fprintf(fp,"%02X-", pkt->FrameHeader.SrcMAC[i]);
+	fprintf(fp,"%02X  ", pkt->FrameHeader.SrcMAC[5]);
+	fprintf(fp,"目的MAC： ");
+	for (int i = 0; i < 5; i++)
+		fprintf(fp,"%02X-", pkt->FrameHeader.DesMAC[i]);
+	fprintf(fp,"%02X\n", pkt->FrameHeader.DesMAC[5]);
+
+}
+
+
 void log::write2log_arp(ARPFrame_t* pkt)//arp类型
 {
-	diary[num % 100].index = num++;
-	strcpy(diary[num % 100].type, "ARP");
+	fprintf(fp, "ARP  ");
 
-	diary[num % 100].arp.ip = pkt->SendIP;
-	memcpy(diary[num % 100].arp.mac, pkt->SendHa, 6);
+	in_addr addr;
+	addr.s_addr = pkt->SendIP;
+	char* pchar = inet_ntoa(addr);
+	fprintf(fp, "IP： ");
+	fprintf(fp, "%s  ", pchar);
+
+	fprintf(fp, "MAC： ");
+	for (int i = 0; i < 5; i++)
+		fprintf(fp, "%02X-", pkt->SendHa[i]);
+	fprintf(fp,"%02X\n", pkt->SendHa[5]);
+
 }
 
 DWORD WINAPI handlerRequest(LPVOID lparam)
@@ -701,9 +771,15 @@ DWORD WINAPI handlerRequest(LPVOID lparam)
 			else if (ntohs(header->FrameType) == 0x800)
 			{
 				Data_t* data = (Data_t*)pkt_data;
+				ltable.write2log_ip("接收", data);
+
+				DWORD ip1_ = data->IPHeader.DstIP;
+				DWORD ip_ = rtable.lookup(ip1_);
+				if(ip_==-1)continue;
+
 				//bool t=checkchecksum(data);
 				if (checkchecksum(data))
-				//if (data->IPHeader.DstIP == inet_addr("192.168.124.2") || data->IPHeader.SrcIP == inet_addr("192.168.124.2"))
+					//if (data->IPHeader.DstIP == inet_addr("191.168.124.1") || data->IPHeader.SrcIP == inet_addr("192.168.124.1"))
 				{
 					if (data->IPHeader.DstIP != inet_addr(ip[0]) && data->IPHeader.DstIP != inet_addr(ip[1]))
 					{
@@ -711,43 +787,54 @@ DWORD WINAPI handlerRequest(LPVOID lparam)
 						int t2 = compare(data->FrameHeader.SrcMAC, broadcast);
 						if (!t1 && !t2)
 						{
+
+							
+
+
 							ICMP_t* temp_ = (ICMP_t*)pkt_data;
 							ICMP_t temp = *temp_;
 
+							//printf("%d",sizeof(temp));
+
 							BYTE mac[6];
-							/*getothermac(inet_addr("255.255.255.0"),inet_addr("192.168.7.2"),mac,(u_char*)pkt_data);
-							getmac(mac);
-						resend(temp, mac);*/
+
+							//in_addr addr;
+							//addr.s_addr = data->IPHeader.SrcIP;
+							//char* pchar = inet_ntoa(addr);
+							//printf("S:%s\t", pchar);
+							//printf("\n");
+
+							//addr.s_addr = data->IPHeader.DstIP;
+							//pchar = inet_ntoa(addr);
+							//printf("D:%s\t", pchar);
+							//printf("\n");
 
 
 
-							in_addr addr;
-							addr.s_addr = data->IPHeader.SrcIP;
-							char* pchar = inet_ntoa(addr);
-							printf("%s\t", pchar);
-							printf("\n");
 
-							addr.s_addr = data->IPHeader.DstIP;
-							pchar = inet_ntoa(addr);
-							printf("%s\t", pchar);
-							printf("\n");
+							//addr.s_addr = ip_;
+							//pchar = inet_ntoa(addr);
+							//printf("next:%s\t", pchar);
+							//printf("\n");
 
-
-							DWORD ip1 = data->IPHeader.DstIP;
-							DWORD ip = rtable.lookup(ip1);
-
-
-							addr.s_addr = ip;
-							pchar = inet_ntoa(addr);
-							printf("%s\t", pchar);
-							printf("\n");
-
-							if (ip != -1)
+							if(ip_==0)
 							{
-								getothermac(inet_addr("255.255.255.0"), ip, mac);
-								getmac(mac);
+								if (!arptable::lookup(ip1_, mac))
+									arptable::insert(ip1_, mac);
+								//getmac(mac);
 								resend(temp, mac);
 							}
+
+							else if (ip_ != -1)
+							{
+								/*getothermac(inet_addr("255.255.255.0"), ip, mac);
+								getmac(mac);*/
+								if (!arptable::lookup(ip_, mac))
+									arptable::insert(ip_, mac);
+								//getmac(mac);
+								resend(temp, mac);
+							}
+							//printf("-------------------------\n");
 							//printf("\n");
 
 
@@ -778,10 +865,10 @@ void setchecksum(Data_t* temp)
 {
 	temp->IPHeader.Checksum = 0;
 	unsigned int sum = 0;
-	u_char* t = (u_char*)&temp->IPHeader;
+	WORD* t = (WORD*)&temp->IPHeader;
 	for (int i = 0; i < sizeof(IPHeader_t)/2; i++)
 	{
-		sum += t[2 * i] << 8 + t[2 * i + 1];
+		sum += t[i];
 		while (sum >= 0x10000)
 		{
 			int s = sum >> 16;
@@ -805,8 +892,34 @@ bool checkchecksum(Data_t* temp)
 			sum += s;
 		}
 	}
-	printf("%d", (WORD)~temp->IPHeader.Checksum);
-	if (sum == 0x9999)
+	//printf("%d", (WORD)~temp->IPHeader.Checksum);
+	if (sum == 65535)
 		return 1;
+	return 0;
+}
+
+
+
+
+int arptable::num = 0;
+void arptable::insert(DWORD ip, BYTE mac[6])
+{
+	atable[num].ip = ip;
+	getothermac(ip,atable[num].mac);
+	memcpy(mac,atable[num].mac,6);
+	num++;
+}
+int arptable::lookup(DWORD ip, BYTE mac[6])
+{
+	memset(mac, 0, 6);
+	for (int i = 0; i < num; i++)
+	{
+		if (ip == atable[i].ip)
+		{
+			memcpy(mac, atable[i].mac, 6);
+			return 1;
+		}
+	}
+	//未知返回00
 	return 0;
 }
